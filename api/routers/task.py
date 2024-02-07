@@ -1,10 +1,12 @@
 from fastapi import APIRouter
+from typing import List
+import api.schemas.task as task_schema
 
 router = APIRouter()
 
-@router.get("/tasks")
+@router.get("/tasks", response_model=List[task_schema.Task])
 async def show():
-    pass
+    return [task_schema.Task(id=1, title="ToDo1")]
 
 @router.post("/tasks")
 async def create():
