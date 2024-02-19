@@ -4,7 +4,7 @@ import api.models.task as task_model
 import api.schemas.task as task_schema
 
 
-async def create_task(
+async def create(
     db: AsyncSession, task_create: task_schema.TaskCreate
 ) -> task_model.Task:
     task = task_model.Task(**task_create.dict())
