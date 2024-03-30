@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import api.models.task_model as task_model
-import api.schemas.task as task_schema
+import api.schemas.task_schema as task_schema
 
 
 async def create(
