@@ -1,13 +1,18 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
 
-class User(BaseModel):
-    id: int
-    user_name: str = Field(max_length=30)
-    password: str
-    email: str = Field(max_length=80)
-    last_name: str = Field(max_length=40) 
-    first_name: str = Field(max_length=40)
-    created_at: datetime
-    updated_at: datetime
+from sqlalchemy import Column, Integer, String, DateTime
+
+from api.db import Base
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_name = Column(String(30), unique=True, index=True, nullable=False)
+    password = Column(String)
+    email = Column(String(80))
+    last_name = Column(String(40))
+    first_name = Column(String(40))
+    created_at = Column(DateTime, default=datetime.now(), nullable=False)
+    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
     
