@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.engine import Result
 from sqlalchemy import select
 
 from typing import List
@@ -15,25 +16,25 @@ async def create(db: AsyncSession, user_create: user_schema.UserCreate):
     return user
 
 async def get(db: AsyncSession, id: int):
-    async with db.begin():
-        result = await db.execute(
-            select(user_model.User).where(user_model.User.id == id)
-        )
-        return result.scalars().first()
+    result: Result = await db.execute(
+        select(user_model.User).filter(user_model.User.id == id)
+    )
+    user = result.first()
+    return user[0] if user is not None else None
 
 async def get_by_username(db: AsyncSession, user_name: str):
-    async with db.begin():
-        result = await db.execute(
-            select(user_model.User).where(user_model.User.user_name == user_name)
-        )
-        return result.scalars().first()
+    result = await db.execute(
+        select(user_model.User).filter(user_model.User.user_name == user_name)
+    )
+    user = result.first()
+    return user[0] if user is not None else None
 
-async def get_all(db: AsyncSession) -> List[user_model.User]:
-    async with db.begin():
-        result = await db.execute(
-            select(user_model.User)
-        )
-        return result.scalars().all()
+# WIP
+async def get_all(db: AsyncSession):
+    result: Result = await db.execute(
+        select(user_model.User)
+    )
+    return result.all()
 
 async def update(db: AsyncSession, id: int, user_update: user_schema.UserUpdate):
     async with db.begin():
