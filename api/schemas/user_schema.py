@@ -1,20 +1,23 @@
 from datetime import datetime
-
-from pydantic import BaseModel, Field
+from typing import Optional
+from pydantic import BaseModel, EmailStr, Field
 
 class UserBase(BaseModel):
-    user_name: str
-    email: str
-    first_name: str
-    last_name: str
-    created_at: datetime
-    updated_at: datetime
+    user_name: Optional[str] = Field(None)
+    email: Optional[EmailStr] = Field(None)
+    first_name: Optional[str] = Field(None)
+    last_name: Optional[str] = Field(None)
     
 class UserCreate(UserBase):
-    password: str
+    password: Optional[str] = Field(None)
 
 class UserUpdate(UserBase):
     pass
+
+class UserResponse(UserBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
 
 class User(UserBase):
     id: int
