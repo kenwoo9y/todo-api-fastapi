@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, func
+from sqlalchemy.orm import relationship
 
 from api.db import Base
 
@@ -13,4 +14,6 @@ class User(Base):
     last_name = Column(String(40))
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    tasks = relationship("Task", back_populates="owner")
     
