@@ -11,6 +11,7 @@ fastapi = "^0.110.1"
 uvicorn = {extras = ["standard"], version = "^0.29.0"}
 sqlalchemy = "^2.0.29"
 aiomysql = "^0.2.0"
+email-validator = "^2.1.1"
 
 
 [build-system]
