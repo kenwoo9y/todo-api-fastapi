@@ -8,7 +8,7 @@ from api.db import get_db
 
 router = APIRouter()
 
-@router.post("/users", response_model=user_schema.User)
+@router.post("/users", response_model=user_schema.UserResponse)
 async def create(
     body: user_schema.UserCreate,
     db: AsyncSession = Depends(get_db)

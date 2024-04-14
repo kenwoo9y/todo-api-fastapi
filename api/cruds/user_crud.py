@@ -10,7 +10,6 @@ import api.schemas.user_schema as user_schema
 async def create(db: AsyncSession, user_create: user_schema.UserCreate):
     user = user_model.User(**user_create.dict())
     db.add(user)
-    
     await db.commit()
     await db.refresh(user)
     return user
@@ -36,7 +35,6 @@ async def get_all(db: AsyncSession):
     )
     return result.all()
 
-# WIP
 async def update(db: AsyncSession, id: int, user_update: user_schema.UserUpdate):
     db_user: Result = await db.execute(
         select(user_model.User).filter(user_model.User.id == id)
@@ -44,13 +42,8 @@ async def update(db: AsyncSession, id: int, user_update: user_schema.UserUpdate)
     user = db_user.first()
         
     if user:
-        user.user_name = user_update.user_name
-        user.email = user_update.email
-        user.first_name = user_update.first_name
-        user.last_name = user_update.last_name
-        user.updated_at = user_update.updated_at
-        db.add(user)
-        
+        for key, value in user_update.dict():
+            setattr(user, key, value)
         await db.commit()
         await db.refresh(user)
         
