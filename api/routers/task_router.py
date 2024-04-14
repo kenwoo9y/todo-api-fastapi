@@ -1,26 +1,29 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
+
 import api.schemas.task_schema as task_schema
 import api.cruds.task_crud as task_crud
 from api.db import get_db
 
 router = APIRouter()
 
-@router.get("/tasks", response_model=List[task_schema.Task])
-async def show():
-    return [task_schema.Task(id=1, title="ToDo1")]
+@router.post("/tasks")
+async def create():
+    pass
 
-@router.post("/tasks", response_model=task_schema.TaskCreateResponse)
-async def create(
-    task_body: task_schema.TaskCreate, db: AsyncSession = Depends(get_db)
-):
-    return await task_crud.create(db, task_body)
+@router.get("/tasks")
+async def get():
+    pass
 
-@router.put("/tasks/{id}", response_model=task_schema.TaskCreateResponse)
-async def update(task_id: int, task_body: task_schema.TaskCreate):
-    return task_schema.TaskCreateResponse(id=task_id, **task_body.dict())
+@router.get("/tasks")
+async def get_all():
+    pass
 
-@router.delete("/tasks/{id}", response_model=None)
-async def delete(task_id: int):
-    return
+@router.put("/tasks/{id}")
+async def update():
+    pass
+
+@router.delete("/tasks/{id}")
+async def delete():
+    pass
