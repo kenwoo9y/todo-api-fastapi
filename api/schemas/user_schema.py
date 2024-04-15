@@ -15,9 +15,9 @@ class UserUpdate(UserBase):
     pass
 
 class UserResponse(UserBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
+    id: Optional[int] = Field(None)
+    created_at: Optional[datetime] = Field(None)
+    updated_at: Optional[datetime] = Field(None)
 
 class User(UserBase):
     id: int

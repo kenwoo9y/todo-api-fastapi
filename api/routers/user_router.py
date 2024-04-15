@@ -16,7 +16,7 @@ async def create(
     user = await user_crud.create(db=db, user_create=body)
     return user
 
-@router.get("/users/{id}", response_model=Optional[user_schema.User])
+@router.get("/users/{id}", response_model=Optional[user_schema.UserResponse])
 async def get(
     id: int,
     db: AsyncSession = Depends(get_db)
@@ -24,7 +24,7 @@ async def get(
     user = await user_crud.get(db=db, id=id)
     return user  
 
-@router.get("/users", response_model=List[user_schema.User])
+@router.get("/users", response_model=List[user_schema.UserResponse], response_model_exclude_unset=True)
 async def get_all(
     db: AsyncSession = Depends(get_db)
 ):

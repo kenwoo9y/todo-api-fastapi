@@ -22,18 +22,17 @@ async def get(db: AsyncSession, id: int):
     return user[0] if user is not None else None
 
 async def get_by_username(db: AsyncSession, user_name: str):
-    result = await db.execute(
+    result: Result = await db.execute(
         select(user_model.User).filter(user_model.User.user_name == user_name)
     )
     user = result.first()
     return user[0] if user is not None else None
 
-# WIP
 async def get_all(db: AsyncSession):
     result: Result = await db.execute(
         select(user_model.User)
     )
-    return result.all()
+    return result.scalars().all()
 
 async def update(db: AsyncSession, id: int, user_update: user_schema.UserUpdate):
     db_user: Result = await db.execute(
