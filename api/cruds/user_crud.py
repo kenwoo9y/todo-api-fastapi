@@ -34,18 +34,12 @@ async def get_all(db: AsyncSession):
     )
     return result.scalars().all()
 
-async def update(db: AsyncSession, id: int, user_update: user_schema.UserUpdate):
-    db_user: Result = await db.execute(
-        select(user_model.User).filter(user_model.User.id == id)
-    )
-    user = db_user.first()
-        
-    if user:
-        for key, value in user_update.dict():
-            setattr(user, key, value)
-        await db.commit()
-        await db.refresh(user)
-        
+async def update(db: AsyncSession, user_update: user_schema.UserUpdate, user: user_model.User):
+    for key, value in user_update.dict(exclude_unset=True).items():
+        setattr(user, key, value)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 async def delete(db: AsyncSession, id: int):
