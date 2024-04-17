@@ -42,12 +42,6 @@ async def update(db: AsyncSession, user_update: user_schema.UserUpdate, user: us
     await db.refresh(user)
     return user
 
-async def delete(db: AsyncSession, id: int):
-    async with db.begin():
-        db_user = await db.execute(
-            select(user_model.User).where(user_model.User.id == id)
-        )
-        user = db_user.scalars().first()
-        
-        if user:
-            await db.delete(user)
+async def delete(db: AsyncSession, user: user_model.User):
+    await db.delete(user)
+    await db.commit()

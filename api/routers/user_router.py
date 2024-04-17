@@ -49,6 +49,8 @@ async def delete(
     id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    user = await user_crud.delete(db=db, id=id)
+    user = await user_crud.get(db=db, id=id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    return await user_crud.delete(db=db, user=user)
