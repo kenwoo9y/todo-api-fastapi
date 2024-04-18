@@ -8,9 +8,13 @@ from api.db import get_db
 
 router = APIRouter()
 
-@router.post("/tasks")
-async def create():
-    pass
+@router.post("/tasks", response_model=task_schema.TaskResponse)
+async def create(
+    body: task_schema.TaskCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    task = await task_crud.create(db=db, task_create=body)
+    return task
 
 @router.get("/tasks")
 async def get():
