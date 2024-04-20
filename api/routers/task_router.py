@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Optional
 
 import api.schemas.task_schema as task_schema
 import api.cruds.task_crud as task_crud
@@ -16,13 +16,28 @@ async def create(
     task = await task_crud.create(db=db, task_create=body)
     return task
 
-@router.get("/tasks")
-async def get():
-    pass
+@router.get("/tasks/{id}", response_model=Optional[task_schema.TaskResponse])
+async def get(
+    id: int, 
+    db: AsyncSession = Depends(get_db)
+):
+    task = await task_crud.get(db=db, id=id)
+    return task
 
-@router.get("/tasks")
-async def get_all():
-    pass
+@router.get("/tasks", response_model=List[task_schema.TaskResponse], response_model_exclude_unset=True)
+async def get_all(
+    db: AsyncSession = Depends(get_db)
+):
+    tasks = await task_crud.get_all(db=db)
+    return tasks
+
+@router.get("/users/{owner_id}/tasks", response_model=List[task_schema.TaskResponse], response_model_exclude_unset=True)
+async def get_all_by_owner(
+    owner_id: int, 
+    db: AsyncSession = Depends(get_db)
+):
+    tasks = await task_crud.get_all_by_owner(db=db, owner_id=owner_id)
+    return tasks
 
 @router.put("/tasks/{id}")
 async def update():
