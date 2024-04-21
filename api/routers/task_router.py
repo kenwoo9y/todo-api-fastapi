@@ -39,9 +39,18 @@ async def get_all_by_owner(
     tasks = await task_crud.get_all_by_owner(db=db, owner_id=owner_id)
     return tasks
 
-@router.put("/tasks/{id}")
-async def update():
-    pass
+@router.put("/tasks/{id}", response_model=task_schema.TaskResponse)
+async def update(
+    id: int, 
+    body: task_schema.TaskUpdate, 
+    db: AsyncSession = Depends(get_db)
+):
+    task = await task_crud.get(db=db, id=id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    updated_task = await task_crud.update(db=db, task_update=body, task=task)
+    return updated_task
 
 @router.delete("/tasks/{id}")
 async def delete():

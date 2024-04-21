@@ -33,20 +33,13 @@ async def get_all_by_owner(db: AsyncSession, owner_id: int):
     )
     return result.scalars().all()
 
-async def update(db: AsyncSession, id: int, task_update: task_schema.TaskUpdate):
-    async with db.begin():
-        db_task = await db.execute(
-            select(task_model.Task).where(task_model.Task.id == id)
-        )
-        task = db_task.scalars().first()
-        
-        if task:
-            for key, value in task_update.dict().items():
-                setattr(task, key, value)
-            await db.commit()
-            await db.refresh(task)
-            
-        return task
+async def update(db: AsyncSession, task_update: task_schema.TaskUpdate, task: task_model.Task):
+    for key, value in task_update.dict(exclude_unset=True).items():
+        setattr(task, key, value)
+    db.add(task)
+    await db.commit()
+    await db.refresh(task)
+    return task
 
 async def delete(db: AsyncSession, id: int):
     async with db.begin():
