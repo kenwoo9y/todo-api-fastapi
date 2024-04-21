@@ -41,12 +41,6 @@ async def update(db: AsyncSession, task_update: task_schema.TaskUpdate, task: ta
     await db.refresh(task)
     return task
 
-async def delete(db: AsyncSession, id: int):
-    async with db.begin():
-        db_task = await db.execute(
-            select(task_model.Task).where(task_model.Task.id == id)
-        )
-        task = db_task.scalars().first()
-        
-        if task:
-            await db.delete(task)
+async def delete(db: AsyncSession, task: task_model.Task):
+    await db.delete(task)
+    await db.commit()
