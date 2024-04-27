@@ -14,7 +14,7 @@ services:
     container_name: mysql-db
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 'yes' # rootアカウントをパスワードなしで作成
-      MYSQL_DATABASE: 'todo'
+      MYSQL_DATABASE: todo
       MYSQL_USER: todo
       MYSQL_PASSWORD: todo
     volumes:
@@ -23,5 +23,19 @@ services:
     command: --default-authentication-plugin=mysql_native_password  # MySQL8.0ではデフォルトが"caching_sha2_password"で、ドライバが非対応のため変更
     ports:
       - 33306:3306  # ホストマシンのポート33306を、docker内のポート3306に接続する
+  
+  postgresql-db:
+    image: postgres:16
+    platform: linux/x86_64
+    container_name: postgresql-db
+    environment:
+      POSTGRES_DB: todo
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: todo
+    volumes:
+      - todo-db-data:/var/lib/postgresql
+    ports:
+      - 5433:5432
+
 volumes:
   todo-db-data:
