@@ -7,7 +7,8 @@ async def test_create_user_ok(async_client):
         "user_name": "foobar",
         "email": "foobar@example.com",
         "first_name": "foo",
-        "last_name": "bar"
+        "last_name": "bar",
+        "password": "password"
     })
     assert response.status_code == starlette.status.HTTP_200_OK
     response_obj = response.json()
