@@ -6,7 +6,7 @@ async def test_create_task_ok(async_client):
     response = await async_client.post("/tasks", json={
         "title": "テストタスク",
         "description": "テストタスク",
-        "status": "waiting",
+        "status": "todo",
         "owner_id": "9999"
     })
     assert response.status_code == starlette.status.HTTP_200_OK

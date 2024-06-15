@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 class Status(str, Enum):
-    WAITING = "waiting"
+    ToDo = "todo"
     DOING = "doing"
     DONE = "done"
 
