@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -11,6 +11,7 @@ class Status(str, Enum):
 class TaskBase(BaseModel):
    title: Optional[str] = Field(None)
    description: Optional[str] = Field(None)
+   due_date: Optional[date] = Field(None)
    status: Optional[Status] = Field(None)
    owner_id: Optional[int] = Field(None)
 
