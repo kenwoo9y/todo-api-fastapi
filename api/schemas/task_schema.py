@@ -4,9 +4,9 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 class Status(str, Enum):
-    ToDo = "todo"
-    DOING = "doing"
-    DONE = "done"
+    TODO = "ToDo"
+    DOING = "Doing"
+    DONE = "Done"
 
 class TaskBase(BaseModel):
    title: Optional[str] = Field(None)

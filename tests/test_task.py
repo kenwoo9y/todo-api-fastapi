@@ -7,7 +7,7 @@ async def test_create_task_ok(async_client):
         "title": "テストタスク",
         "description": "テストタスク",
         "due_date": "2024-01-01",
-        "status": "todo",
+        "status": "ToDo",
         "owner_id": "9999"
     })
     assert response.status_code == starlette.status.HTTP_200_OK
