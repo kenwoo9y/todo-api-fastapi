@@ -8,7 +8,7 @@ import api.models.user_model as user_model
 import api.schemas.user_schema as user_schema
 
 async def create(db: AsyncSession, user_create: user_schema.UserCreate):
-    user = user_model.User(**user_create.dict())
+    user = user_model.User(**user_create.model_dump())
     db.add(user)
     await db.commit()
     await db.refresh(user)

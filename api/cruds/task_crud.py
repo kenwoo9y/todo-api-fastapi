@@ -8,7 +8,7 @@ import api.models.task_model as task_model
 import api.schemas.task_schema as task_schema
 
 async def create(db: AsyncSession, task_create: task_schema.TaskCreate):
-    task = task_model.Task(**task_create.dict())
+    task = task_model.Task(**task_create.model_dump())
     db.add(task)
     await db.commit()
     await db.refresh(task)
