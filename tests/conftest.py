@@ -12,9 +12,8 @@ ASYNC_DB_URL = "sqlite+aiosqlite:///:memory:"
 
 # エンジンとセッションの設定
 async_engine = create_async_engine(ASYNC_DB_URL, echo=True)
-async_session = sessionmaker(
-    autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession
-)
+async_session = sessionmaker(autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession)
+
 
 # テスト用DBセッションを返すfixture
 @pytest_asyncio.fixture
@@ -35,6 +34,6 @@ async def async_client() -> AsyncClient:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
-    
+
     # テスト終了時のリソース解放
     await async_engine.dispose()

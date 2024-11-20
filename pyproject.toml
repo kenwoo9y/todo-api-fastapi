@@ -41,7 +41,7 @@ fixable = ["ALL"]
 [tool.ruff.lint.mccabe]
 max-complexity = 5
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 force-single-line = true
 
 [tool.ruff.format]
