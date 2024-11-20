@@ -1,5 +1,7 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 ASYNC_DB_URL = "mysql+aiomysql://root@mysql-db:3306/todo?charset=utf8"
 # ASYNC_DB_URL = "postgresql+asyncpg://todo:todo@postgresql-db:5432/todo"

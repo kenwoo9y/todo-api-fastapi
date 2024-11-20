@@ -1,9 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
-import api.schemas.user_schema as user_schema
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
 import api.cruds.user_crud as user_crud
+import api.schemas.user_schema as user_schema
 from api.db import get_db
 
 router = APIRouter()

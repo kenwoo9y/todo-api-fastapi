@@ -1,8 +1,7 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.engine import Result
-from sqlalchemy import select
 
-from typing import List
+from sqlalchemy import select
+from sqlalchemy.engine import Result
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import api.models.task_model as task_model
 import api.schemas.task_schema as task_schema
