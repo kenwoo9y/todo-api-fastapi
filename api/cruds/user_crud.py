@@ -21,8 +21,8 @@ async def get(db: AsyncSession, id: int):
     return user[0] if user is not None else None
 
 
-async def get_by_username(db: AsyncSession, user_name: str):
-    result: Result = await db.execute(select(user_model.User).filter(user_model.User.user_name == user_name))
+async def get_by_username(db: AsyncSession, username: str):
+    result: Result = await db.execute(select(user_model.User).filter(user_model.User.username == username))
     user = result.first()
     return user[0] if user is not None else None
 

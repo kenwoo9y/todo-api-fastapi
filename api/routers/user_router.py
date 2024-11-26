@@ -25,9 +25,9 @@ async def get(id: int, db: AsyncSession = Depends(get_db)):
     return user
 
 
-@router.get("/users/username/{user_name}", response_model=Optional[user_schema.UserResponse])
-async def get_by_username(user_name: str, db: AsyncSession = Depends(get_db)):
-    user = await user_crud.get_by_username(db=db, user_name=user_name)
+@router.get("/users/username/{username}", response_model=Optional[user_schema.UserResponse])
+async def get_by_username(username: str, db: AsyncSession = Depends(get_db)):
+    user = await user_crud.get_by_username(db=db, username=username)
     return user
 
 
