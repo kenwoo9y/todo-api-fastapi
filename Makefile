@@ -20,7 +20,7 @@ test: # Execute tests
 	docker-compose run --entrypoint "poetry run pytest" todo-api
 
 migrate:  ## Execute migration
-	docker-compose exec todo-api poetry run python -m ./api.migrate_db
+	docker-compose exec todo-api poetry run python -m api.migrate_db
 
 mysql: ## Access MySQL Database
 	docker-compose exec mysql-db mysql todo
