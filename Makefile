@@ -19,6 +19,9 @@ ps: ## Check container status
 test: # Execute tests
 	docker-compose run --entrypoint "poetry run pytest" todo-api
 
+coverage: # Execute tests with coverage
+	docker-compose run --entrypoint "poetry run pytest --cov" todo-api
+
 migrate:  ## Execute migration
 	docker-compose exec todo-api poetry run python -m api.migrate_db
 
@@ -27,6 +30,18 @@ mysql: ## Access MySQL Database
 
 psql: ## Access PostgreSQL Database
 	docker-compose exec postgresql-db psql -U todo
+
+lint: ## Run Ruff linter
+	ruff check .
+
+lint-fix: ## Run Ruff linter and apply fixes
+	ruff check . --fix
+
+format-check: ## Check code formatting with Ruff
+	ruff format . --check --diff
+
+format-fix: ## Format code with Ruff
+	ruff format .
 
 help: ## Show options
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
