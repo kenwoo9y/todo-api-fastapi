@@ -17,7 +17,7 @@ ps: ## Check container status
 	docker compose ps
 
 test: # Execute tests
-	docker-compose run --entrypoint "poetry run pytest" todo-api
+	docker-compose run --entrypoint "poetry run pytest -v" todo-api
 
 coverage: # Execute tests with coverage
 	docker-compose run --entrypoint "poetry run pytest --cov" todo-api
