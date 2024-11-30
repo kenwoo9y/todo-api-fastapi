@@ -16,6 +16,21 @@ async def test_create_user_missing_username(async_client):
 
 
 @pytest.mark.asyncio
+async def test_create_user_missing_email(async_client):
+    # メールアドレスが欠けたリクエスト
+    payload = {
+        "username": "foobar",
+        "first_name": "Foo",
+        "last_name": "Bar"
+    }
+    response = await async_client.post("/users", json=payload)
+
+    # バリデーションエラー（Email is required）を確認
+    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert "email" in response.json()["detail"][0]["loc"]
+
+
+@pytest.mark.asyncio
 async def test_create_user_invalid_email(async_client):
     # 無効なメールアドレスでリクエスト
     payload = {"username": "foobar", "email": "invalid-email", "first_name": "Foo", "last_name": "Bar"}
