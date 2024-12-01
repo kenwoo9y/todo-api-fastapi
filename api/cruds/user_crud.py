@@ -1,5 +1,7 @@
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.engine import Result
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import api.models.user_model as user_model
@@ -9,8 +11,12 @@ import api.schemas.user_schema as user_schema
 async def create(db: AsyncSession, user_create: user_schema.UserCreate):
     user = user_model.User(**user_create.model_dump())
     db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    try:
+        await db.commit()
+        await db.refresh(user)
+    except IntegrityError as error:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Username already exists") from error
     return user
 
 
