@@ -3,7 +3,7 @@ import starlette.status
 
 
 @pytest.mark.asyncio
-async def test_create_user_ok(async_client):
+async def test_create_user_success(async_client):
     # ユーザー作成の正常系テスト
     payload = {
         "username": "foobar",
