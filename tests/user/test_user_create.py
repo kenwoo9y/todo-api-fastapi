@@ -28,16 +28,16 @@ async def test_create_user_success(async_client):
 async def test_create_user_duplicate_username(async_client):
     # 初回のユーザー作成
     payload = {
-        "username": "duplicateuser",
-        "email": "unique@example.com",
-        "first_name": "Unique",
-        "last_name": "User",
+        "username": "duplicateuser1",
+        "email": "duplicateuser1@example.com",
+        "first_name": "Duplicate",
+        "last_name": "User1",
     }
     response = await async_client.post("/users", json=payload)
     assert response.status_code == starlette.status.HTTP_201_CREATED
 
     # 同じ username で再度作成
-    payload["email"] = "another@example.com"  # 別のメールアドレスを指定
+    payload["email"] = "duplicateuser2@example.com"  # 別のメールアドレスを指定
     response = await async_client.post("/users", json=payload)
 
     # ステータスコードの確認
@@ -45,4 +45,28 @@ async def test_create_user_duplicate_username(async_client):
 
     # エラーメッセージの確認
     response_obj = response.json()
-    assert response_obj["detail"] == "Username already exists"
+    assert response_obj["detail"] == "Username or Email already exists"
+
+
+@pytest.mark.asyncio
+async def test_create_user_duplicate_email(async_client):
+    # 初回のユーザー作成
+    payload = {
+        "username": "duplicateuser1",
+        "email": "duplicateuser1@example.com",
+        "first_name": "Duplicate",
+        "last_name": "User1",
+    }
+    response = await async_client.post("/users", json=payload)
+    assert response.status_code == starlette.status.HTTP_201_CREATED
+
+    # 同じ email で再度作成
+    payload["username"] = "duplicateuser2"  # 別のユーザ名を指定
+    response = await async_client.post("/users", json=payload)
+
+    # ステータスコードの確認
+    assert response.status_code == starlette.status.HTTP_409_CONFLICT
+
+    # エラーメッセージの確認
+    response_obj = response.json()
+    assert response_obj["detail"] == "Username or Email already exists"
