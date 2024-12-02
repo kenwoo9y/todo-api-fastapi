@@ -41,7 +41,7 @@ async def get_all_users(db: AsyncSession = Depends(get_db)):
     return users
 
 
-@router.put("/users/{id}", response_model=user_schema.UserResponse)
+@router.patch("/users/{id}", response_model=user_schema.UserResponse)
 async def update_user(id: int, body: user_schema.UserUpdate, db: AsyncSession = Depends(get_db)):
     user = await user_crud.get(db=db, id=id)
     if user is None:
