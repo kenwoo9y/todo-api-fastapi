@@ -38,7 +38,7 @@ async def get_all(db: AsyncSession):
 
 
 async def update(db: AsyncSession, user_update: user_schema.UserUpdate, user: user_model.User):
-    for key, value in user_update.dict(exclude_unset=True).items():
+    for key, value in user_update.model_dump(exclude_unset=True).items():
         setattr(user, key, value)
     db.add(user)
     await db.commit()

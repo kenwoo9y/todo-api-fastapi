@@ -31,7 +31,7 @@ async def get_all_by_owner(db: AsyncSession, owner_id: int):
 
 
 async def update(db: AsyncSession, task_update: task_schema.TaskUpdate, task: task_model.Task):
-    for key, value in task_update.dict(exclude_unset=True).items():
+    for key, value in task_update.model_dump(exclude_unset=True).items():
         setattr(task, key, value)
     db.add(task)
     await db.commit()
