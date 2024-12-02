@@ -16,7 +16,7 @@ async def create(db: AsyncSession, user_create: user_schema.UserCreate):
         await db.refresh(user)
     except IntegrityError as error:
         await db.rollback()
-        raise HTTPException(status_code=409, detail="Username already exists") from error
+        raise HTTPException(status_code=409, detail="Username or Email already exists") from error
     return user
 
 
@@ -41,8 +41,12 @@ async def update(db: AsyncSession, user_update: user_schema.UserUpdate, user: us
     for key, value in user_update.model_dump(exclude_unset=True).items():
         setattr(user, key, value)
     db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    try:
+        await db.commit()
+        await db.refresh(user)
+    except IntegrityError as error:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Username or Email already exists") from error
     return user
 
 
