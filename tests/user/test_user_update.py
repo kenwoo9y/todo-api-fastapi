@@ -58,7 +58,10 @@ async def test_partial_update_user_success(async_client):
     # 更新後のデータを確認
     updated_user = response.json()
     assert updated_user["first_name"] == update_payload["first_name"]
-    assert updated_user["last_name"] == payload["last_name"]  # 変更していないフィールド
+    # 変更していないフィールド
+    assert updated_user["username"] == payload["username"]
+    assert updated_user["email"] == payload["email"]
+    assert updated_user["last_name"] == payload["last_name"]
 
 
 @pytest.mark.asyncio
