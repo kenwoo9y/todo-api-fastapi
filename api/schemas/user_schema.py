@@ -19,7 +19,7 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(UserBase):
-    username: Optional[str] = Field(None, max_length=30)
+    username: Optional[str] = Field(None, max_length=30, min_length=3)
     email: Optional[EmailStr] = Field(None, max_length=80)
     first_name: Optional[str] = Field(None, max_length=40)
     last_name: Optional[str] = Field(None, max_length=40)
