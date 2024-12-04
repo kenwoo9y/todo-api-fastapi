@@ -19,7 +19,7 @@ ps: ## Check container status
 test: # Execute tests
 	docker-compose run --entrypoint "poetry run pytest -v" todo-api
 
-coverage: # Execute tests with coverage
+test-coverage: # Execute tests with coverage
 	docker-compose run --entrypoint "poetry run pytest --cov" todo-api
 
 migrate:  ## Execute migration
@@ -31,7 +31,7 @@ mysql: ## Access MySQL Database
 psql: ## Access PostgreSQL Database
 	docker-compose exec postgresql-db psql -U todo
 
-lint: ## Run Ruff linter
+lint-check: ## Run Ruff linter
 	ruff check .
 
 lint-fix: ## Run Ruff linter and apply fixes
