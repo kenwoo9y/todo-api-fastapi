@@ -18,7 +18,7 @@ async def test_update_user_empty_username(async_client):
     update_payload = {
         "username": "",
     }
-    
+
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "username" in response.json()["detail"][0]["loc"]
@@ -40,7 +40,7 @@ async def test_update_user_max_length_username(async_client):
     update_payload = {
         "username": "a" * 30,  # 30文字
     }
-    
+
     # ユーザー更新
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_200_OK
@@ -70,7 +70,7 @@ async def test_update_user_long_username(async_client):
     update_payload = {
         "username": "a" * 31,  # 31文字
     }
-    
+
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "username" in response.json()["detail"][0]["loc"]
@@ -92,7 +92,7 @@ async def test_update_user_min_length_username(async_client):
     update_payload = {
         "username": "a" * 3,  # 3文字
     }
-    
+
     # ユーザー更新
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_200_OK
@@ -122,7 +122,7 @@ async def test_update_user_short_username(async_client):
     update_payload = {
         "username": "a" * 2,  # 2文字
     }
-    
+
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "username" in response.json()["detail"][0]["loc"]
@@ -144,7 +144,7 @@ async def test_update_user_empty_email(async_client):
     update_payload = {
         "email": "",
     }
-    
+
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "email" in response.json()["detail"][0]["loc"]
@@ -166,7 +166,7 @@ async def test_update_user_invalid_email(async_client):
     update_payload = {
         "email": "invalid-email",
     }
-    
+
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "email" in response.json()["detail"][0]["loc"]
@@ -188,7 +188,7 @@ async def test_update_user_max_length_email(async_client):
     update_payload = {
         "email": "a" * 64 + "@example.com",  # ローカルパート64文字
     }
-    
+
     # ユーザー更新
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_200_OK
@@ -218,7 +218,7 @@ async def test_update_user_long_email(async_client):
     update_payload = {
         "email": "a" * 65 + "@example.com",  # ローカルパート65文字
     }
-    
+
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "email" in response.json()["detail"][0]["loc"]
@@ -238,10 +238,10 @@ async def test_update_user_empty_first_name_and_last_name(async_client):
 
     # 更新データ
     update_payload = {
-        "first_name": "", 
+        "first_name": "",
         "last_name": "",
     }
-    
+
     # ユーザー更新
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_200_OK
@@ -271,7 +271,7 @@ async def test_update_user_max_length_first_name(async_client):
     update_payload = {
         "first_name": "a" * 40,  # 40文字
     }
-    
+
     # ユーザー更新
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_200_OK
@@ -301,7 +301,7 @@ async def test_update_user_long_first_name(async_client):
     update_payload = {
         "first_name": "a" * 41,  # 41文字
     }
-    
+
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "first_name" in response.json()["detail"][0]["loc"]
@@ -323,7 +323,7 @@ async def test_update_user_max_length_last_name(async_client):
     update_payload = {
         "last_name": "a" * 40,  # 40文字
     }
-    
+
     # ユーザー更新
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_200_OK
@@ -353,7 +353,7 @@ async def test_update_user_long_last_name(async_client):
     update_payload = {
         "last_name": "a" * 41,  # 41文字
     }
-    
+
     response = await async_client.patch(f"/users/{user_id}", json=update_payload)
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "last_name" in response.json()["detail"][0]["loc"]
