@@ -1,0 +1,10 @@
+[report]
+include_namespace_packages = true
+
+omit = 
+    *__init__.py
+    tests/*
+    api/main.py 
+    api/cors.py
+    api/db.py
+    api/migrate_db.py
