@@ -15,8 +15,8 @@ class Status(str, Enum):
 
 
 class TaskBase(BaseModel):
-    title: Optional[str] = Field(None)
-    description: Optional[str] = Field(None)
+    title: Optional[str] = Field(None, max_length=30)
+    description: Optional[str] = Field(None, max_length=255)
     due_date: Optional[date] = Field(None)
     status: Optional[Status] = Field(None)
     owner_id: Optional[int] = Field(None)
