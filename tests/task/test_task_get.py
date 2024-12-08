@@ -14,7 +14,7 @@ async def test_get_task_by_id_success(async_client):
     }
     create_response = await async_client.post("/tasks", json=payload)
     task_id = create_response.json()["id"]
-    
+
     # タスク取得
     response = await async_client.get(f"/tasks/{task_id}")
     assert response.status_code == starlette.status.HTTP_200_OK
@@ -55,7 +55,7 @@ async def test_get_all_tasks(async_client):
     }
     await async_client.post("/tasks", json=task1)
     await async_client.post("/tasks", json=task2)
-    
+
     # 全タスク取得
     response = await async_client.get("/tasks")
     assert response.status_code == starlette.status.HTTP_200_OK
