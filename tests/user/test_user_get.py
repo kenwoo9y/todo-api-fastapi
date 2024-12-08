@@ -20,6 +20,10 @@ async def test_get_user_by_id_success(async_client):
     user_data = response.json()
     assert user_data["username"] == payload["username"]
     assert user_data["email"] == payload["email"]
+    assert user_data["first_name"] == payload["first_name"]
+    assert user_data["last_name"] == payload["last_name"]
+    assert "created_at" in user_data
+    assert "updated_at" in user_data
 
 
 @pytest.mark.asyncio
@@ -47,6 +51,10 @@ async def test_get_user_by_username_success(async_client):
     user_data = response.json()
     assert user_data["username"] == payload["username"]
     assert user_data["email"] == payload["email"]
+    assert user_data["first_name"] == payload["first_name"]
+    assert user_data["last_name"] == payload["last_name"]
+    assert "created_at" in user_data
+    assert "updated_at" in user_data
 
 
 @pytest.mark.asyncio
