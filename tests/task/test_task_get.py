@@ -64,3 +64,52 @@ async def test_get_all_tasks(async_client):
     titles = [task["title"] for task in tasks]
     assert "task1" in titles
     assert "task2" in titles
+
+
+@pytest.mark.asyncio
+async def test_get_all_tasks_by_owner(async_client):
+    # テスト用ユーザデータの作成
+    user1 = {
+        "username": "user1",
+        "email": "user1@example.com",
+        "first_name": "First1",
+        "last_name": "Last1",
+    }
+    create_response = await async_client.post("/users", json=user1)
+    user_id = create_response.json()["id"]
+
+    # 複数タスクを作成
+    task1 = {
+        "title": "task1",
+        "description": "task1 description",
+        "due_date": "2025-01-01",
+        "status": "ToDo",
+        "owner_id": user_id,
+    }
+    task2 = {
+        "title": "task2",
+        "description": "task2 description",
+        "due_date": "2025-01-01",
+        "status": "ToDo",
+        "owner_id": user_id,
+    }
+    task3 = {
+        "title": "task3",
+        "description": "task2 description",
+        "due_date": "2025-01-01",
+        "status": "ToDo",
+        "owner_id": 0,
+    }
+    await async_client.post("/tasks", json=task1)
+    await async_client.post("/tasks", json=task2)
+    await async_client.post("/tasks", json=task3)
+
+    # タスク取得
+    response = await async_client.get(f"/users/{user_id}/tasks")
+    assert response.status_code == starlette.status.HTTP_200_OK
+    tasks = response.json()
+    assert len(tasks) == 2
+    titles = [task["title"] for task in tasks]
+    assert "task1" in titles
+    assert "task2" in titles
+    assert "task3" not in titles
