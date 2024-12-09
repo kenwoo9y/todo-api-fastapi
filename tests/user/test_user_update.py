@@ -66,6 +66,15 @@ async def test_partial_update_user_success(async_client):
 
 @pytest.mark.asyncio
 async def test_update_user_not_found(async_client):
+    # テスト用データの作成
+    payload = {
+        "username": "foobar",
+        "email": "foobar@example.com",
+        "first_name": "Foo",
+        "last_name": "Bar",
+    }
+    await async_client.post("/users", json=payload)
+
     # 存在しないユーザーIDで更新
     update_payload = {
         "username": "nonexistentuser",
