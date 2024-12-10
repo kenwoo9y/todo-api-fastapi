@@ -1,5 +1,6 @@
 [report]
 include_namespace_packages = true
+show_missing=true
 
 omit = 
     *__init__.py
