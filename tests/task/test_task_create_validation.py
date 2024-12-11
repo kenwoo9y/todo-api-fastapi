@@ -101,6 +101,6 @@ async def test_create_task_invalid_status(async_client):
     }
     response = await async_client.post("/tasks", json=payload)
 
-    # due_dateのバリデーションエラーを確認
+    # statusのバリデーションエラーを確認
     assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "status" in response.json()["detail"][0]["loc"]
