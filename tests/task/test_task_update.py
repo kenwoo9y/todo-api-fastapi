@@ -70,7 +70,7 @@ async def test_partial_update_task_success(async_client):
 
 
 @pytest.mark.asyncio
-async def test_update_user_not_found(async_client):
+async def test_update_task_not_found(async_client):
     # テスト用データの作成
     payload = {
         "title": "foo",

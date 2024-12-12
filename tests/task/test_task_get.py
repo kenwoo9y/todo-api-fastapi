@@ -29,7 +29,7 @@ async def test_get_task_by_id_success(async_client):
 
 
 @pytest.mark.asyncio
-async def test_get_task_by_invalid_id(async_client):
+async def test_get_task_not_found(async_client):
     # 存在しないIDを取得
     response = await async_client.get("/tasks/99999")
     assert response.status_code == starlette.status.HTTP_404_NOT_FOUND

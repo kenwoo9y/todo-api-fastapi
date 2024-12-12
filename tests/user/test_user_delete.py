@@ -24,7 +24,7 @@ async def test_delete_user_success(async_client):
 
 
 @pytest.mark.asyncio
-async def test_delete_user_invalid_id(async_client):
+async def test_delete_user_not_found(async_client):
     # 存在しないユーザーIDで削除を試行
     response = await async_client.delete("/users/99999")
     assert response.status_code == starlette.status.HTTP_404_NOT_FOUND

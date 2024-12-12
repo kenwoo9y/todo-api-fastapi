@@ -25,7 +25,7 @@ async def test_delete_task_success(async_client):
 
 
 @pytest.mark.asyncio
-async def test_delete_task_invalid_id(async_client):
+async def test_delete_task_not_found(async_client):
     # 存在しないタスクIDで削除を試行
     response = await async_client.delete("/tasks/99999")
     assert response.status_code == starlette.status.HTTP_404_NOT_FOUND

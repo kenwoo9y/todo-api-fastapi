@@ -27,7 +27,7 @@ async def test_get_user_by_id_success(async_client):
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_invalid_id(async_client):
+async def test_get_user_by_id_not_found(async_client):
     # 存在しないIDを取得
     response = await async_client.get("/users/99999")
     assert response.status_code == starlette.status.HTTP_404_NOT_FOUND
@@ -58,7 +58,7 @@ async def test_get_user_by_username_success(async_client):
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_invalid_username(async_client):
+async def test_get_user_by_username_not_found(async_client):
     # 存在しないユーザー名を取得
     response = await async_client.get("/users/username/unknownuser")
     assert response.status_code == starlette.status.HTTP_404_NOT_FOUND
