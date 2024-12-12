@@ -49,10 +49,10 @@ async def update_task(id: int, body: task_schema.TaskUpdate, db: AsyncSession = 
     return updated_task
 
 
-@router.delete("/tasks/{id}", response_model=None)
+@router.delete("/tasks/{id}", status_code=204)
 async def delete_task(id: int, db: AsyncSession = Depends(get_db)):
     task = await task_crud.get(db=db, id=id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    return await task_crud.delete(db=db, task=task)
+    await task_crud.delete(db=db, task=task)
