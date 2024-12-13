@@ -9,3 +9,8 @@ omit =
     api/cors.py
     api/db.py
     api/migrate_db.py
+
+[coverage:run]
+concurrency =
+  greenlet
+  thread
