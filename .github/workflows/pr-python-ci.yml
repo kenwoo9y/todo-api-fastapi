@@ -1,0 +1,48 @@
+name: Python CI Workflow
+
+on:
+  pull_request:
+    branches: main
+
+defaults:
+  run:
+    working-directory: ./  # 作業ディレクトリを指定
+
+jobs:
+  python-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      # コードのチェックアウト
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Pythonのセットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9' # Pythonのバージョンを指定
+
+      # Ruffのインストール
+      - name: Install Ruff
+        run: python -m pip install ruff
+
+      # RuffによるLintチェック
+      - name: Run Ruff (lint)
+        run: ruff check --output-format=github .
+
+      # RuffによるFormatチェック
+      - name: Run Ruff (format)
+        run: ruff format . --check --diff
+
+      # poetryのインストール
+      - name: Install poetry
+        run: python -m pip install poetry
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: poetry install
+
+      # Pytestの実行とカバレッジチェック
+      - name: Run Pytest with coverage
+        run: poetry run pytest --cov --cov-fail-under=80
