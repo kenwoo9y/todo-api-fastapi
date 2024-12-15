@@ -1,4 +1,4 @@
-.PHONY: help build-local up down logs ps test migrate mysql psql 
+.PHONY: help build-local up down logs ps test test-coverage migrate mysql psql lint-check lint-fix format-check format-fix
 .DEFAULT_GOAL := help
 
 build-local: ## Build docker image to local development
@@ -16,10 +16,10 @@ logs: ## Tail docker compose logs
 ps: ## Check container status
 	docker compose ps
 
-test: # Execute tests
+test: ## Execute tests
 	docker-compose run --entrypoint "poetry run pytest -v" todo-api
 
-test-coverage: # Execute tests with coverage
+test-coverage: ## Execute tests with coverage
 	docker-compose run --entrypoint "poetry run pytest --cov" todo-api
 
 migrate:  ## Execute migration
