@@ -3,6 +3,21 @@ import starlette.status
 
 
 @pytest.mark.asyncio
+async def test_update_user_invalid_id(async_client):
+    # 更新データ
+    update_payload = {
+        "username": "buzqux",
+        "email": "buzqux@example.com",
+        "first_name": "Buz",
+        "last_name": "Qux",
+    }
+
+    # 無効なユーザーID（例: 文字列）でユーザ更新
+    response = await async_client.patch("/users/invalid_id", json=update_payload)
+    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+@pytest.mark.asyncio
 async def test_update_user_empty_username(async_client):
     # テスト用データの作成
     payload = {

@@ -3,6 +3,22 @@ import starlette.status
 
 
 @pytest.mark.asyncio
+async def test_update_task_invalid_id(async_client):
+    # 更新データ
+    update_payload = {
+        "title": "baz",
+        "description": "qux",
+        "due_date": "2025-01-02",
+        "status": "Doing",
+        "owner_id": 999,
+    }
+
+    # 無効なタスクID（例: 文字列）でユーザ更新
+    response = await async_client.patch("/tasks/invalid_id", json=update_payload)
+    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+@pytest.mark.asyncio
 async def test_update_task_max_length_title(async_client):
     # テスト用データの作成
     payload = {
