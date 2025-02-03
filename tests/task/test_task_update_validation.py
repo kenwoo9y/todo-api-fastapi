@@ -19,6 +19,30 @@ async def test_update_task_invalid_id(async_client):
 
 
 @pytest.mark.asyncio
+async def test_update_task_empty_title(async_client):
+    # テスト用データの作成
+    payload = {
+        "title": "foo",
+        "description": "bar",
+        "due_date": "2025-01-01",
+        "status": "ToDo",
+        "owner_id": 0,
+    }
+    create_response = await async_client.post("/tasks", json=payload)
+    task_id = create_response.json()["id"]
+
+    # 更新データ
+    update_payload = {"title": ""}
+
+    # タスク更新
+    response = await async_client.patch(f"/tasks/{task_id}", json=update_payload)
+
+    # タイトルのバリデーションエラーを確認
+    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert "title" in response.json()["detail"][0]["loc"]
+
+
+@pytest.mark.asyncio
 async def test_update_task_max_length_title(async_client):
     # テスト用データの作成
     payload = {

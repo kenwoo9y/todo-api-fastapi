@@ -3,6 +3,22 @@ import starlette.status
 
 
 @pytest.mark.asyncio
+async def test_create_task_missing_title(async_client):
+    # タイトルが欠けたリクエスト
+    payload = {
+        "description": "task description",
+        "due_date": "2025-01-01",
+        "status": "ToDo",
+        "owner_id": 0,
+    }
+    response = await async_client.post("/tasks", json=payload)
+
+    # タイトルのバリデーションエラーを確認
+    assert response.status_code == starlette.status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert "title" in response.json()["detail"][0]["loc"]
+
+
+@pytest.mark.asyncio
 async def test_create_task_max_length_title(async_client):
     # タイトルが最大長の場合のリクエスト
     payload = {
