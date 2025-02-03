@@ -15,7 +15,7 @@ class Status(str, Enum):
 
 
 class TaskBase(BaseModel):
-    title: Optional[str] = Field(None, max_length=30)
+    title: Optional[str] = Field(..., max_length=30, min_length=1)
     description: Optional[str] = Field(None, max_length=255)
     due_date: Optional[date] = Field(None)
     status: Optional[Status] = Field(None)
@@ -27,7 +27,11 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(TaskBase):
-    pass
+    title: Optional[str] = Field(None, max_length=30, min_length=1)
+    description: Optional[str] = Field(None, max_length=255)
+    due_date: Optional[date] = Field(None)
+    status: Optional[Status] = Field(None)
+    owner_id: Optional[int] = Field(None)
 
 
 class TaskResponse(TaskBase):
