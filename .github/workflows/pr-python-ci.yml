@@ -27,13 +27,13 @@ jobs:
       - name: Install Ruff
         run: python -m pip install ruff
 
-      # RuffによるLintチェック
-      - name: Run Ruff (lint)
-        run: ruff check --output-format=github .
-
       # RuffによるFormatチェック
       - name: Run Ruff (format)
         run: ruff format . --check --diff
+
+      # RuffによるLintチェック
+      - name: Run Ruff (lint)
+        run: ruff check --output-format=github .
 
       # poetryのインストール
       - name: Install poetry
