@@ -18,7 +18,7 @@ services:
       MYSQL_USER: todo
       MYSQL_PASSWORD: todo
     volumes:
-      - todo-db-data:/var/lib/mysql
+      - mysql-todo-db-data:/var/lib/mysql
       - $PWD/_tools/mysql/conf.d:/etc/mysql/conf.d:cached
     command: --default-authentication-plugin=mysql_native_password  # MySQL8.0ではデフォルトが"caching_sha2_password"で、ドライバが非対応のため変更
     ports:
@@ -33,9 +33,10 @@ services:
       POSTGRES_USER: todo
       POSTGRES_PASSWORD: todo
     volumes:
-      - todo-db-data:/var/lib/postgresql
+      - postgresql-todo-db-data:/var/lib/postgresql/data
     ports:
       - 5433:5432
 
 volumes:
-  todo-db-data:
+  mysql-todo-db-data:
+  postgresql-todo-db-data:
