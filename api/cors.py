@@ -2,7 +2,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from decouple import config
 
 # 環境変数からORIGINSを取得し、カンマで区切られた文字列をリストに変換
-origins = config('CORS_ORIGINS').split(',')
+origins = config("CORS_ORIGINS").split(",")
+
 
 def add_cors_middleware(app):
     app.add_middleware(
