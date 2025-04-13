@@ -16,7 +16,7 @@ This is a ToDo Web API implemented with FastAPI, designed for simplicity and ext
 ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
 
 ### Programming Languages
-- [Python](https://www.python.org/) - Primary development language
+- [Python](https://www.python.org/) v3.9 - Primary development language
 
 ### Backend
 - [FastAPI](https://fastapi.tiangolo.com/) v0.110.1 - High-performance Python web framework
@@ -27,9 +27,8 @@ This is a ToDo Web API implemented with FastAPI, designed for simplicity and ext
 - [PostgreSQL](https://www.postgresql.org/) v16 - Alternative relational database
 
 ### Development Environment
-- [Poetry](https://python-poetry.org/) - Python package manager
-- [Docker](https://www.docker.com/) - Containerization platform
-- [Docker Compose](https://docs.docker.com/compose/) - Tool for defining and running multi-container Docker applications
+- [Poetry](https://python-poetry.org/) v2.1.2 - Python package manager
+- [Docker](https://www.docker.com/) with Compose v3.9 - Containerization platform for building and managing applications
 
 ### Testing & Quality Assurance
 - [pytest](https://docs.pytest.org/) v0.23.6 - Python testing framework
