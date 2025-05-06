@@ -46,28 +46,28 @@ This is a ToDo Web API implemented with FastAPI, designed for simplicity and ext
     $ cd todo-api
     ```
 
-2. Build the required Docker images:
+2. Create environment file:
+    ```
+    $ cp .env.example .env
+    ```
+    Edit `.env` file to match your environment if needed.
+
+3. Build the required Docker images:
     ```
     $ make build-local
     ```
 
-3. Start the containers:
+4. Start the containers:
     ```
     $ make up
     ```
 
-4. Apply database migrations:
-    Edit `api/migrate_db.py` based on the database you want to use:
-    ```api/migrate_db.py
-    DB_URL = "mysql+pymysql://root@mysql-db:3306/todo?charset=utf8"
-    # DB_URL = "postgresql+psycopg2://todo:todo@postgresql-db:5432/todo"
-    ```
-    Then run the migration:
+5. Apply database migrations:
     ```
     $ make migrate
     ```
 
-5. Verify the API is running by accessing http://localhost:8000/docs.
+6. Verify the API is running by accessing http://localhost:8000/docs.
 
 ## Usage
 ### API Documentation
@@ -116,11 +116,37 @@ This is a ToDo Web API implemented with FastAPI, designed for simplicity and ext
     ```
 
 ## Database
-Edit `api/db.py` based on the database you want to use:
-```api/db.py
-ASYNC_DB_URL = "mysql+aiomysql://root@mysql-db:3306/todo?charset=utf8"
-# ASYNC_DB_URL = "postgresql+asyncpg://todo:todo@postgresql-db:5432/todo"
+### Switching Database
+1. Edit `.env` file:
+
+For MySQL:
 ```
+DB_TYPE=mysql
+DB_HOST=mysql-db
+DB_PORT=3306
+DB_NAME=todo
+DB_USER=<your_username>
+DB_PASSWORD=<your_password>
+```
+
+For PostgreSQL:
+```
+DB_TYPE=psql
+DB_HOST=postgresql-db
+DB_PORT=5432
+DB_NAME=todo
+DB_USER=<your_username>
+DB_PASSWORD=<your_password>
+```
+
+2. Rebuild and restart the application:
+```
+$ make build-local
+$ make up
+$ make migrate
+```
+
+### Database Access
 - Access MySQL database:
     ```
     $ make mysql
