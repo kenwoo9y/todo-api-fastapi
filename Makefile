@@ -1,4 +1,4 @@
-.PHONY: help build-local up down logs ps test test-coverage migrate mysql psql lint-check lint-fix format-check format-fix
+.PHONY: help build-local up down logs ps migrate mysql psql test test-coverage lint-check lint-fix format-check format-fix
 .DEFAULT_GOAL := help
 
 build-local: ## Build docker image to local development
@@ -16,20 +16,20 @@ logs: ## Tail docker compose logs
 ps: ## Check container status
 	docker compose ps
 
+migrate:  ## Execute migration
+	docker-compose exec todo-api poetry run python -m api.migrate_db
+
+mysql: ## Access MySQL Database
+	docker compose exec mysql-db mysql -u todo -ptodo
+
+psql: ## Access PostgreSQL Database
+	docker compose exec postgresql-db psql -U todo -d todo -W
+
 test: ## Execute tests
 	docker-compose run --entrypoint "poetry run pytest -v" todo-api
 
 test-coverage: ## Execute tests with coverage
 	docker-compose run --entrypoint "poetry run pytest --cov" todo-api
-
-migrate:  ## Execute migration
-	docker-compose exec todo-api poetry run python -m api.migrate_db
-
-mysql: ## Access MySQL Database
-	docker-compose exec mysql-db mysql todo
-
-psql: ## Access PostgreSQL Database
-	docker-compose exec postgresql-db psql -U todo
 
 lint-check: ## Run Ruff linter
 	ruff check .

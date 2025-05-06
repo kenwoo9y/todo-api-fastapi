@@ -1,37 +1,43 @@
 version: '3.9'
 services:
   todo-api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - .dockervenv:/src/.venv
       - .:/src
     ports:
-      - 8000:8000 # ホストマシンのポート8000を、docker内のポート8000に接続する
-
+      - 8000:8000
+    depends_on:
+      - mysql-db
+      - postgresql-db
+    env_file:
+      - .env
   mysql-db:
     image: mysql:8.0
-    platform: linux/x86_64 # M1 Macの場合必要
+    platform: linux/x86_64
     container_name: mysql-db
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes' # rootアカウントをパスワードなしで作成
-      MYSQL_DATABASE: todo
-      MYSQL_USER: todo
-      MYSQL_PASSWORD: todo
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql-todo-db-data:/var/lib/mysql
       - $PWD/_tools/mysql/conf.d:/etc/mysql/conf.d:cached
-    command: --default-authentication-plugin=mysql_native_password  # MySQL8.0ではデフォルトが"caching_sha2_password"で、ドライバが非対応のため変更
+    command: --default-authentication-plugin=mysql_native_password
     ports:
-      - 33306:3306  # ホストマシンのポート33306を、docker内のポート3306に接続する
+      - 33306:3306
   
   postgresql-db:
     image: postgres:16
     platform: linux/x86_64
     container_name: postgresql-db
     environment:
-      POSTGRES_DB: todo
-      POSTGRES_USER: todo
-      POSTGRES_PASSWORD: todo
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgresql-todo-db-data:/var/lib/postgresql/data
     ports:
