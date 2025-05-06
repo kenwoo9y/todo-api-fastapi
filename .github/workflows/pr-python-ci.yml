@@ -45,4 +45,11 @@ jobs:
 
       # Pytestの実行とカバレッジチェック
       - name: Run Pytest with coverage
+        env:
+          DB_TYPE: mysql
+          DB_HOST: mysql-db
+          DB_PORT: 3306
+          DB_NAME: todo
+          DB_USER: todo
+          DB_PASSWORD: todo
         run: poetry run pytest --cov --cov-fail-under=80
