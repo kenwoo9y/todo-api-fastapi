@@ -1,3 +1,4 @@
+from sqlalchemy import case
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,12 +22,26 @@ async def get(db: AsyncSession, id: int):
 
 
 async def get_all(db: AsyncSession):
-    result: Result = await db.execute(select(task_model.Task))
+    result: Result = await db.execute(
+        select(task_model.Task).order_by(
+            case((task_model.Task.status == "Done", 1), else_=0).asc(),
+            task_model.Task.due_date.asc(),
+            task_model.Task.created_at.desc(),
+        )
+    )
     return result.scalars().all()
 
 
 async def get_all_by_owner(db: AsyncSession, owner_id: int):
-    result: Result = await db.execute(select(task_model.Task).filter(task_model.Task.owner_id == owner_id))
+    result: Result = await db.execute(
+        select(task_model.Task)
+        .filter(task_model.Task.owner_id == owner_id)
+        .order_by(
+            case((task_model.Task.status == "Done", 1), else_=0).asc(),
+            task_model.Task.due_date.asc(),
+            task_model.Task.created_at.desc(),
+        )
+    )
     return result.scalars().all()
 
 
