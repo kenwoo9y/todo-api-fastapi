@@ -1,3 +1,6 @@
+include .env
+export
+
 .PHONY: help build-local up down logs ps migrate mysql psql test test-coverage lint-check lint-fix format-check format-fix
 .DEFAULT_GOAL := help
 
@@ -20,10 +23,10 @@ migrate:  ## Execute migration
 	docker-compose exec todo-api poetry run python -m api.migrate_db
 
 mysql: ## Access MySQL Database
-	docker compose exec mysql-db mysql -u todo -ptodo
+	docker compose exec mysql-db mysql -u $$DB_USER -p$$DB_PASSWORD
 
 psql: ## Access PostgreSQL Database
-	docker compose exec postgresql-db psql -U todo -d todo -W
+	docker compose exec postgresql-db psql -U $$DB_USER -d $$DB_NAME -W
 
 test: ## Execute tests
 	docker-compose run --entrypoint "poetry run pytest -v" todo-api
@@ -44,5 +47,5 @@ format-fix: ## Format code with Ruff
 	ruff format .
 
 help: ## Show options
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' Makefile | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
