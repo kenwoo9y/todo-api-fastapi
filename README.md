@@ -131,7 +131,7 @@ DB_PASSWORD=<your_password>
 
 For PostgreSQL:
 ```
-DB_TYPE=psql
+DB_TYPE=postgresql
 DB_HOST=postgresql-db
 DB_PORT=5432
 DB_NAME=todo
