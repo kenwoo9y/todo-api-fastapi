@@ -16,7 +16,7 @@ This is a ToDo Web API implemented with FastAPI, designed for simplicity and ext
 ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
 
 ### Programming Languages
-- [Python](https://www.python.org/) v3.9 - Primary development language
+- [Python](https://www.python.org/) v3.11 - Primary development language
 
 ### Backend
 - [FastAPI](https://fastapi.tiangolo.com/) v0.110.1 - High-performance Python web framework
