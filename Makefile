@@ -20,7 +20,7 @@ ps: ## Check container status
 	docker compose ps
 
 migrate:  ## Execute migration
-	docker-compose exec todo-api poetry run python -m api.migrate_db
+	docker-compose run --rm --entrypoint bash todo-api -c "poetry install && poetry run python -m api.migrate_db"
 
 mysql: ## Access MySQL Database
 	docker compose exec mysql-db mysql -u $$DB_USER -p$$DB_PASSWORD
