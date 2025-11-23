@@ -15,4 +15,5 @@ RUN poetry config virtualenvs.in-project true
 RUN if [ -f pyproject.toml ]; then poetry install --no-root; fi
 
 # uvicornのサーバーを立ち上げる
-ENTRYPOINT ["poetry", "run", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--reload"]
+# Herokuでは$PORT環境変数を使用する必要があるため、CMDで動的に設定
+CMD poetry run uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}
