@@ -61,6 +61,11 @@ jobs:
         run: |
           docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
 
+      # Herokuアプリのスタックをcontainerに設定（Dockerアプリとして動作させるため）
+      - name: Set Heroku stack to container
+        run: |
+          heroku stack:set container --app ${{ secrets.HEROKU_APP_NAME }}
+
       # Herokuアプリへのリリース
       - name: Release on Heroku
         run: |
