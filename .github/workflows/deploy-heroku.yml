@@ -65,6 +65,11 @@ jobs:
       - name: Set Heroku stack to container
         run: |
           heroku stack:set container --app ${{ secrets.HEROKU_APP_NAME }}
+      
+      # Herokuアプリに環境変数を設定
+      - name: Set Heroku config vars
+        run: |
+          heroku config:set CLOUD_PROVIDER=heroku --app ${{ secrets.HEROKU_APP_NAME }}
 
       # Herokuアプリへのリリース
       - name: Release on Heroku
