@@ -51,14 +51,15 @@ jobs:
           curl https://cli-assets.heroku.com/install.sh | sh
 
       # Herokuにログイン
+      # HEROKU_API_KEY環境変数が設定されていれば、herokuコマンドは自動的に認証される
       - name: Login to Heroku
         run: |
-          echo "${{ secrets.HEROKU_API_KEY }}" | heroku login --interactive=false
+          heroku auth:whoami
 
       # Herokuアプリの存在確認
       - name: Verify Heroku app exists
         run: |
-          heroku apps:info --app ${{ env.HEROKU_APP_NAME }}
+          heroku apps:info --app $HEROKU_APP_NAME
 
       # jqのインストール（JSONパース用）
       - name: Install jq
@@ -68,7 +69,7 @@ jobs:
       # Herokuアプリの環境変数を取得してエクスポート
       - name: Get and export Heroku config vars
         run: |
-          heroku config --app ${{ env.HEROKU_APP_NAME }} --json > heroku-config.json
+          heroku config --app $HEROKU_APP_NAME --json > heroku-config.json
           echo "DATABASE_URL=$(jq -r '.DATABASE_URL // empty' heroku-config.json)" >> $GITHUB_ENV
           echo "JAWSDB_URL=$(jq -r '.JAWSDB_URL // empty' heroku-config.json)" >> $GITHUB_ENV
           echo "DB_TYPE=$(jq -r '.DB_TYPE // empty' heroku-config.json)" >> $GITHUB_ENV
@@ -82,7 +83,7 @@ jobs:
       # HerokuアプリにCLOUD_PROVIDER環境変数を設定（未設定の場合）
       - name: Set CLOUD_PROVIDER environment variable
         run: |
-          heroku config:set CLOUD_PROVIDER=heroku --app ${{ env.HEROKU_APP_NAME }} || true
+          heroku config:set CLOUD_PROVIDER=heroku --app $HEROKU_APP_NAME || true
 
       # マイグレーションを実行
       - name: Run database migration
