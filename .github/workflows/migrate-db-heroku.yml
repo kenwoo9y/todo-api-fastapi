@@ -1,0 +1,95 @@
+name: Migrate Database on Heroku
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to migrate database (dev, stg, prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  migrate-db-heroku:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    env:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+
+    steps:
+      # コードのチェックアウト
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Pythonのセットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Poetryのインストール
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      # Heroku CLIのインストール
+      - name: Install Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+
+      # Herokuにログイン
+      - name: Login to Heroku
+        run: |
+          echo "${{ secrets.HEROKU_API_KEY }}" | heroku login --interactive=false
+
+      # Herokuアプリの存在確認
+      - name: Verify Heroku app exists
+        run: |
+          heroku apps:info --app ${{ env.HEROKU_APP_NAME }}
+
+      # jqのインストール（JSONパース用）
+      - name: Install jq
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+
+      # Herokuアプリの環境変数を取得してエクスポート
+      - name: Get and export Heroku config vars
+        run: |
+          heroku config --app ${{ env.HEROKU_APP_NAME }} --json > heroku-config.json
+          echo "DATABASE_URL=$(jq -r '.DATABASE_URL // empty' heroku-config.json)" >> $GITHUB_ENV
+          echo "JAWSDB_URL=$(jq -r '.JAWSDB_URL // empty' heroku-config.json)" >> $GITHUB_ENV
+          echo "DB_TYPE=$(jq -r '.DB_TYPE // empty' heroku-config.json)" >> $GITHUB_ENV
+          echo "CLOUD_PROVIDER=heroku" >> $GITHUB_ENV
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+
+      # HerokuアプリにCLOUD_PROVIDER環境変数を設定（未設定の場合）
+      - name: Set CLOUD_PROVIDER environment variable
+        run: |
+          heroku config:set CLOUD_PROVIDER=heroku --app ${{ env.HEROKU_APP_NAME }} || true
+
+      # マイグレーションを実行
+      - name: Run database migration
+        env:
+          CLOUD_PROVIDER: heroku
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          JAWSDB_URL: ${{ env.JAWSDB_URL }}
+          DB_TYPE: ${{ env.DB_TYPE }}
+        run: |
+          poetry run python -m api.migrate_db
