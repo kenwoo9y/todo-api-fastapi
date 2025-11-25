@@ -34,7 +34,7 @@ Configure the following secrets for each environment (dev, stg, prod):
 
 ## Deployment Steps
 
-**Workflow File**: [`.github/workflows/deploy-heroku.yml`](../../.github/workflows/deploy-heroku.yml)
+**Workflow File**: `.github/workflows/deploy-heroku.yml`
 
 ### Automatic Deployment via Branch Push
 
@@ -56,7 +56,7 @@ The workflow is triggered by the `push` event on these branches.
 
 ## Database Migration Steps
 
-**Workflow File**: [`.github/workflows/migrate-db-heroku.yml`](../../.github/workflows/migrate-db-heroku.yml)
+**Workflow File**: `.github/workflows/migrate-db-heroku.yml`
 
 Database migrations are executed manually using GitHub Actions workflows.
 
