@@ -9,6 +9,7 @@ omit =
     api/cors.py
     api/db.py
     api/migrate_db.py
+    api/cloud_db_config.py
 
 [coverage:run]
 concurrency =

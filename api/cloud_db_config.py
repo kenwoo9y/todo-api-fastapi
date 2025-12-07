@@ -84,15 +84,31 @@ def get_aws_database_url() -> str | None:
     """
     AWS環境のデータベース接続URLを取得する。
 
-    AWSでは以下の環境変数が使用される:
-    - DATABASE_URL: RDSなどの接続URL
+    AWSではDB_TYPE環境変数の値に基づいて以下の環境変数が使用される:
+    - DB_TYPE=postgresql: POSTGRESQL_DATABASE_URL
+    - DB_TYPE=mysql: MYSQL_DATABASE_URL
 
     Returns:
         正規化されたデータベース接続URL、または環境変数が設定されていない場合はNone
     """
-    database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        return normalize_database_url(database_url)
+    db_type = os.getenv("DB_TYPE")
+
+    if db_type is None:
+        return None
+
+    db_type_lower = db_type.lower()
+
+    if db_type_lower == "postgresql":
+        # PostgreSQLの場合はPOSTGRESQL_DATABASE_URLを使用
+        database_url = os.getenv("POSTGRESQL_DATABASE_URL")
+        if database_url:
+            return normalize_database_url(database_url)
+
+    elif db_type_lower == "mysql":
+        # MySQLの場合はMYSQL_DATABASE_URLを使用
+        database_url = os.getenv("MYSQL_DATABASE_URL")
+        if database_url:
+            return normalize_database_url(database_url)
 
     return None
 
@@ -101,15 +117,31 @@ def get_gcp_database_url() -> str | None:
     """
     Google Cloud Platform環境のデータベース接続URLを取得する。
 
-    GCPでは以下の環境変数が使用される:
-    - DATABASE_URL: Cloud SQLなどの接続URL
+    GCPではDB_TYPE環境変数の値に基づいて以下の環境変数が使用される:
+    - DB_TYPE=postgresql: POSTGRESQL_DATABASE_URL
+    - DB_TYPE=mysql: MYSQL_DATABASE_URL
 
     Returns:
         正規化されたデータベース接続URL、または環境変数が設定されていない場合はNone
     """
-    database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        return normalize_database_url(database_url)
+    db_type = os.getenv("DB_TYPE")
+
+    if db_type is None:
+        return None
+
+    db_type_lower = db_type.lower()
+
+    if db_type_lower == "postgresql":
+        # PostgreSQLの場合はPOSTGRESQL_DATABASE_URLを使用
+        database_url = os.getenv("POSTGRESQL_DATABASE_URL")
+        if database_url:
+            return normalize_database_url(database_url)
+
+    elif db_type_lower == "mysql":
+        # MySQLの場合はMYSQL_DATABASE_URLを使用
+        database_url = os.getenv("MYSQL_DATABASE_URL")
+        if database_url:
+            return normalize_database_url(database_url)
 
     return None
 
@@ -118,15 +150,31 @@ def get_azure_database_url() -> str | None:
     """
     Azure環境のデータベース接続URLを取得する。
 
-    Azureでは以下の環境変数が使用される:
-    - DATABASE_URL: Azure Databaseなどの接続URL
+    AzureではDB_TYPE環境変数の値に基づいて以下の環境変数が使用される:
+    - DB_TYPE=postgresql: POSTGRESQL_DATABASE_URL
+    - DB_TYPE=mysql: MYSQL_DATABASE_URL
 
     Returns:
         正規化されたデータベース接続URL、または環境変数が設定されていない場合はNone
     """
-    database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        return normalize_database_url(database_url)
+    db_type = os.getenv("DB_TYPE")
+
+    if db_type is None:
+        return None
+
+    db_type_lower = db_type.lower()
+
+    if db_type_lower == "postgresql":
+        # PostgreSQLの場合はPOSTGRESQL_DATABASE_URLを使用
+        database_url = os.getenv("POSTGRESQL_DATABASE_URL")
+        if database_url:
+            return normalize_database_url(database_url)
+
+    elif db_type_lower == "mysql":
+        # MySQLの場合はMYSQL_DATABASE_URLを使用
+        database_url = os.getenv("MYSQL_DATABASE_URL")
+        if database_url:
+            return normalize_database_url(database_url)
 
     return None
 
@@ -199,9 +247,9 @@ def get_database_url() -> str:
 
     対応する値:
     - Heroku: Heroku環境（DB_TYPE=postgresqlならDATABASE_URL、DB_TYPE=mysqlならJAWSDB_URL）
-    - AWS: AWS環境（DATABASE_URL）
-    - GCP: Google Cloud Platform環境（DATABASE_URL）
-    - Azure: Microsoft Azure環境（DATABASE_URL）
+    - AWS: AWS環境（DB_TYPE=postgresqlならPOSTGRESQL_DATABASE_URL、DB_TYPE=mysqlならMYSQL_DATABASE_URL）
+    - GCP: Google Cloud環境（DB_TYPE=postgresqlならPOSTGRESQL_DATABASE_URL、DB_TYPE=mysqlならMYSQL_DATABASE_URL）
+    - Azure: Azure環境（DB_TYPE=postgresqlならPOSTGRESQL_DATABASE_URL、DB_TYPE=mysqlならMYSQL_DATABASE_URL）
     - 環境変数が存在しない場合: ローカル環境（個別環境変数）
 
     Returns:
@@ -249,7 +297,7 @@ def get_database_url() -> str:
     if database_url is None:
         provider_name = cloud_provider.capitalize()
 
-        # Herokuの場合は特別なメッセージ
+        # Herokuの場合
         if cloud_provider_lower == "heroku":
             raise ValueError(
                 f"Database connection URL not found for {provider_name} environment. "
@@ -258,10 +306,12 @@ def get_database_url() -> str:
                 "- DB_TYPE=mysql and JAWSDB_URL (for Heroku MySQL)"
             )
 
-        # AWS、GCP、Azureの場合はDATABASE_URLのみ
+        # AWS、GCP、Azureの場合
         raise ValueError(
             f"Database connection URL not found for {provider_name} environment. "
-            "Please set DATABASE_URL environment variable."
+            "Please set the following:\n"
+            "- DB_TYPE=postgresql and POSTGRESQL_DATABASE_URL (for PostgreSQL)\n"
+            "- DB_TYPE=mysql and MYSQL_DATABASE_URL (for MySQL)"
         )
 
     return database_url
