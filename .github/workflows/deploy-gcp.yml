@@ -25,6 +25,9 @@ defaults:
 jobs:
   gcp-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Workload Identity Federationに必要
     environment:
       name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || github.ref_name }}
     env:
