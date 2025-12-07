@@ -297,7 +297,7 @@ def get_database_url() -> str:
     if database_url is None:
         provider_name = cloud_provider.capitalize()
 
-        # Herokuの場合は特別なメッセージ
+        # Herokuの場合
         if cloud_provider_lower == "heroku":
             raise ValueError(
                 f"Database connection URL not found for {provider_name} environment. "
@@ -306,7 +306,7 @@ def get_database_url() -> str:
                 "- DB_TYPE=mysql and JAWSDB_URL (for Heroku MySQL)"
             )
 
-        # AWS、GCP、Azureの場合はDB_TYPEに応じた環境変数
+        # AWS、GCP、Azureの場合
         raise ValueError(
             f"Database connection URL not found for {provider_name} environment. "
             "Please set the following:\n"
