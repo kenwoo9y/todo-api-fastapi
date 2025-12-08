@@ -1,0 +1,116 @@
+name: Migrate Database on Google Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to migrate database (dev, stg, prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  migrate-db-gcp:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Workload Identity Federationに必要
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ secrets.GCP_REGION }}
+      CLOUD_RUN_SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
+      WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WIF_PROVIDER }}
+      SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+    steps:
+      # コードのチェックアウト
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # GCPへの認証
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      # Cloud SDKのセットアップ
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      # jqのインストール（JSONパース用）
+      - name: Install jq
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+
+      # Cloud Runサービスの存在確認
+      - name: Verify Cloud Run service exists
+        run: |
+          gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --format="value(metadata.name)"
+
+      # Cloud Runサービスの環境変数を取得してエクスポート
+      - name: Get and export Cloud Run environment variables
+        run: |
+          # Cloud Runサービスの環境変数をJSON形式で取得
+          gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --format json > cloud-run-config.json
+          
+          # DB_TYPEは通常の環境変数として取得
+          DB_TYPE=$(jq -r '.spec.template.spec.containers[0].env[]? | select(.name=="DB_TYPE") | .value // empty' cloud-run-config.json)
+          
+          # POSTGRESQL_DATABASE_URLとMYSQL_DATABASE_URLはSecret Managerから取得
+          # secretKeyRefからシークレット名を取得
+          POSTGRESQL_SECRET_NAME=$(jq -r '.spec.template.spec.containers[0].env[]? | select(.name=="POSTGRESQL_DATABASE_URL") | .valueFrom.secretKeyRef.name' cloud-run-config.json)
+          MYSQL_SECRET_NAME=$(jq -r '.spec.template.spec.containers[0].env[]? | select(.name=="MYSQL_DATABASE_URL") | .valueFrom.secretKeyRef.name' cloud-run-config.json)
+          
+          # Secret Managerから実際の値を取得
+          POSTGRESQL_DATABASE_URL=$(gcloud secrets versions access latest --secret="$POSTGRESQL_SECRET_NAME" --project="${{ env.GCP_PROJECT_ID }}")
+          MYSQL_DATABASE_URL=$(gcloud secrets versions access latest --secret="$MYSQL_SECRET_NAME" --project="${{ env.GCP_PROJECT_ID }}")
+          
+          echo "DB_TYPE=${DB_TYPE}" >> $GITHUB_ENV
+          echo "POSTGRESQL_DATABASE_URL=${POSTGRESQL_DATABASE_URL}" >> $GITHUB_ENV
+          echo "MYSQL_DATABASE_URL=${MYSQL_DATABASE_URL}" >> $GITHUB_ENV
+
+      # Pythonのセットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Poetryのインストール
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+
+      # マイグレーションを実行
+      - name: Run database migration
+        env:
+          CLOUD_PROVIDER: gcp
+          DB_TYPE: ${{ env.DB_TYPE }}
+          POSTGRESQL_DATABASE_URL: ${{ env.POSTGRESQL_DATABASE_URL }}
+          MYSQL_DATABASE_URL: ${{ env.MYSQL_DATABASE_URL }}
+        run: |
+          poetry run python -m api.migrate_db
