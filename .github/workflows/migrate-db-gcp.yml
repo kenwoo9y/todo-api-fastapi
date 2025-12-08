@@ -29,7 +29,8 @@ jobs:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_REGION: ${{ secrets.GCP_REGION }}
       CLOUD_RUN_SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
-      CLOUD_SQL_INSTANCE_CONNECTION_NAME: ${{ secrets.CLOUD_SQL_INSTANCE_CONNECTION_NAME }}
+      SQL_INSTANCE_MYSQL: ${{ secrets.SQL_INSTANCE_MYSQL }}
+      SQL_INSTANCE_POSTGRESQL: ${{ secrets.SQL_INSTANCE_POSTGRESQL }}
       WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WIF_PROVIDER }}
       SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
@@ -97,12 +98,12 @@ jobs:
       # Cloud SQL Proxyを起動
       - name: Start Cloud SQL Proxy
         run: |
-          # DB_TYPEに応じて適切なポートで起動
+          # DB_TYPEに応じて適切なインスタンス接続名とポートで起動
           if [ "${{ env.DB_TYPE }}" = "postgresql" ]; then
-            cloud-sql-proxy ${{ env.CLOUD_SQL_INSTANCE_CONNECTION_NAME }} --port=5432 &
+            cloud-sql-proxy ${{ env.SQL_INSTANCE_POSTGRESQL }} --port=5432 &
             echo $! > /tmp/cloud-sql-proxy.pid
           elif [ "${{ env.DB_TYPE }}" = "mysql" ]; then
-            cloud-sql-proxy ${{ env.CLOUD_SQL_INSTANCE_CONNECTION_NAME }} --port=3306 &
+            cloud-sql-proxy ${{ env.SQL_INSTANCE_MYSQL }} --port=3306 &
             echo $! > /tmp/cloud-sql-proxy.pid
           fi
           # Proxyの起動を待つ
@@ -135,7 +136,6 @@ jobs:
           POSTGRESQL_DATABASE_URL: ${{ env.POSTGRESQL_DATABASE_URL }}
           MYSQL_DATABASE_URL: ${{ env.MYSQL_DATABASE_URL }}
         run: |
-          # データベースURLをCloud SQL Proxy経由に変更
           if [ "${{ env.DB_TYPE }}" = "postgresql" ]; then
             # PostgreSQLの場合、ホストを127.0.0.1、ポートを5432に変更
             # URL形式: postgresql://user:pass@host:port/dbname -> postgresql://user:pass@127.0.0.1:5432/dbname
