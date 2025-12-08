@@ -35,8 +35,8 @@ jobs:
       GCP_REGION: ${{ secrets.GCP_REGION }}
       ARTIFACT_REGISTRY_REPOSITORY: ${{ secrets.ARTIFACT_REGISTRY_REPOSITORY }}
       IMAGE_NAME: todo-api  # Artifact RegistryにプッシュされるDockerイメージ名（任意の値に変更可能）
-      WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-      SERVICE_ACCOUNT: ${{ secrets.SERVICE_ACCOUNT }}
+      WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WIF_PROVIDER }}
+      SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
