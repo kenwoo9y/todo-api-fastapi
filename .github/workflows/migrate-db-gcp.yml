@@ -29,6 +29,7 @@ jobs:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_REGION: ${{ secrets.GCP_REGION }}
       CLOUD_RUN_SERVICE_NAME: ${{ secrets.CLOUD_RUN_SERVICE_NAME }}
+      CLOUD_SQL_INSTANCE_CONNECTION_NAME: ${{ secrets.CLOUD_SQL_INSTANCE_CONNECTION_NAME }}
       WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WIF_PROVIDER }}
       SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
@@ -49,6 +50,13 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
+
+      # Cloud SQL Proxyのインストール
+      - name: Install Cloud SQL Proxy
+        run: |
+          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.0/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          sudo mv cloud-sql-proxy /usr/local/bin/
 
       # jqのインストール（JSONパース用）
       - name: Install jq
@@ -86,6 +94,20 @@ jobs:
           echo "POSTGRESQL_DATABASE_URL=${POSTGRESQL_DATABASE_URL}" >> $GITHUB_ENV
           echo "MYSQL_DATABASE_URL=${MYSQL_DATABASE_URL}" >> $GITHUB_ENV
 
+      # Cloud SQL Proxyを起動
+      - name: Start Cloud SQL Proxy
+        run: |
+          # DB_TYPEに応じて適切なポートで起動
+          if [ "${{ env.DB_TYPE }}" = "postgresql" ]; then
+            cloud-sql-proxy ${{ env.CLOUD_SQL_INSTANCE_CONNECTION_NAME }} --port=5432 &
+            echo $! > /tmp/cloud-sql-proxy.pid
+          elif [ "${{ env.DB_TYPE }}" = "mysql" ]; then
+            cloud-sql-proxy ${{ env.CLOUD_SQL_INSTANCE_CONNECTION_NAME }} --port=3306 &
+            echo $! > /tmp/cloud-sql-proxy.pid
+          fi
+          # Proxyの起動を待つ
+          sleep 5
+
       # Pythonのセットアップ
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -113,4 +135,23 @@ jobs:
           POSTGRESQL_DATABASE_URL: ${{ env.POSTGRESQL_DATABASE_URL }}
           MYSQL_DATABASE_URL: ${{ env.MYSQL_DATABASE_URL }}
         run: |
+          # データベースURLをCloud SQL Proxy経由に変更
+          if [ "${{ env.DB_TYPE }}" = "postgresql" ]; then
+            # PostgreSQLの場合、ホストを127.0.0.1、ポートを5432に変更
+            # URL形式: postgresql://user:pass@host:port/dbname -> postgresql://user:pass@127.0.0.1:5432/dbname
+            export POSTGRESQL_DATABASE_URL=$(echo "${{ env.POSTGRESQL_DATABASE_URL }}" | sed -E 's|@[^/]+/|@127.0.0.1:5432/|')
+          elif [ "${{ env.DB_TYPE }}" = "mysql" ]; then
+            # MySQLの場合、ホストを127.0.0.1、ポートを3306に変更
+            # URL形式: mysql://user:pass@host:port/dbname -> mysql://user:pass@127.0.0.1:3306/dbname
+            export MYSQL_DATABASE_URL=$(echo "${{ env.MYSQL_DATABASE_URL }}" | sed -E 's|@[^/]+/|@127.0.0.1:3306/|')
+          fi
           poetry run python -m api.migrate_db
+
+      # Cloud SQL Proxyを停止
+      - name: Stop Cloud SQL Proxy
+        if: always()
+        run: |
+          if [ -f /tmp/cloud-sql-proxy.pid ]; then
+            kill $(cat /tmp/cloud-sql-proxy.pid) || true
+            rm /tmp/cloud-sql-proxy.pid
+          fi
