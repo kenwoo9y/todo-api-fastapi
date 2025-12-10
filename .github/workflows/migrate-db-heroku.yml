@@ -80,11 +80,6 @@ jobs:
         run: |
           poetry install --no-root
 
-      # HerokuアプリにCLOUD_PROVIDER環境変数を設定（未設定の場合）
-      - name: Set CLOUD_PROVIDER environment variable
-        run: |
-          heroku config:set CLOUD_PROVIDER=heroku --app $HEROKU_APP_NAME || true
-
       # マイグレーションを実行
       - name: Run database migration
         env:
