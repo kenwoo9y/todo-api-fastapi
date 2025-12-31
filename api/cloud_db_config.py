@@ -175,20 +175,19 @@ def get_azure_database_url() -> str | None:
         if database_url:
             normalized_url = normalize_database_url(database_url)
             # Azure環境の特別対応: PostgreSQLの場合はURLにsslmode=requireを追加
-            # 非同期エンジン用のURLなのでis_async=Trueを指定
             from api.azure_db_config import apply_azure_ssl_to_url
 
-            return apply_azure_ssl_to_url(normalized_url, db_type_lower, is_async=True)
+            return apply_azure_ssl_to_url(normalized_url, db_type_lower)
 
     elif db_type_lower == "mysql":
         # MySQLの場合はMYSQL_DATABASE_URLを使用
         database_url = os.getenv("MYSQL_DATABASE_URL")
         if database_url:
             normalized_url = normalize_database_url(database_url)
-            # Azure環境の特別対応: 非同期エンジン（aiomysql）の場合はURLにssl_disabled=Falseを追加
+            # Azure環境の特別対応: MySQLの場合はURLは変更しない（connect_argsでSSL設定を行う）
             from api.azure_db_config import apply_azure_ssl_to_url
 
-            return apply_azure_ssl_to_url(normalized_url, db_type_lower, is_async=True)
+            return apply_azure_ssl_to_url(normalized_url, db_type_lower)
 
     return None
 

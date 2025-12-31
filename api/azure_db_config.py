@@ -57,7 +57,7 @@ def configure_azure_ssl_connection(db_url: str, db_type: str) -> Tuple[str, Dict
     return db_url, connect_args
 
 
-def apply_azure_ssl_to_url(db_url: str, db_type: str, is_async: bool = False) -> str:
+def apply_azure_ssl_to_url(db_url: str, db_type: str) -> str:
     """
     Azure環境でのSSL接続設定をURLに適用する（URLのみを返す）。
 
@@ -67,7 +67,6 @@ def apply_azure_ssl_to_url(db_url: str, db_type: str, is_async: bool = False) ->
     Args:
         db_url: データベース接続URL
         db_type: データベースタイプ（'mysql' または 'postgresql'）
-        is_async: 非同期エンジンを使用するかどうか（未使用、将来の拡張用）
 
     Returns:
         修正されたデータベース接続URL
@@ -97,32 +96,6 @@ def apply_azure_ssl_to_url(db_url: str, db_type: str, is_async: bool = False) ->
         )
 
     return db_url
-
-
-def get_azure_async_connect_args(db_type: str) -> Dict:
-    """
-    Azure環境での非同期エンジン用のconnect_argsを取得する。
-
-    Args:
-        db_type: データベースタイプ（'mysql' または 'postgresql'）
-
-    Returns:
-        connect_args辞書
-    """
-    connect_args: Dict = {}
-
-    if db_type == "mysql":
-        # Azure Database for MySQLはSSL接続が必須
-        # aiomysqlでSSL接続を有効にするにはconnect_argsでssl設定を渡す
-        connect_args = {
-            "ssl": {
-                "ca": None,  # 証明書検証をスキップ（開発環境用）
-                "check_hostname": False,
-            }
-        }
-    # PostgreSQLの場合はURLパラメータで設定するため、connect_argsは不要
-
-    return connect_args
 
 
 def apply_azure_db_config(db_url: str) -> Tuple[str, Dict]:
