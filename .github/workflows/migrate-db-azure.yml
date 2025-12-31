@@ -1,0 +1,144 @@
+name: Migrate Database on Microsoft Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to migrate database (dev, stg, prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  migrate-db-azure:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Azure OIDC認証に必要
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      CONTAINER_APP_NAME: ${{ secrets.CONTAINER_APP_NAME }}
+      KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }}
+
+    steps:
+      # コードのチェックアウト
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Azureへの認証
+      - name: Authenticate to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      # jqのインストール（JSONパース用）
+      - name: Install jq
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+
+      # Container Appsの存在確認
+      - name: Verify Container App exists
+        run: |
+          az containerapp show --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --query "name" -o tsv
+
+      # Container Appsの環境変数を取得してエクスポート
+      - name: Get and export Container App environment variables
+        run: |
+          # Container Appの設定をJSON形式で取得
+          az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --output json > container-app-config.json
+          
+          # DB_TYPEは通常の環境変数として取得
+          DB_TYPE=$(jq -r '.properties.template.containers[0].env[]? | select(.name=="DB_TYPE") | .value // empty' container-app-config.json)
+          
+          # POSTGRESQL_DATABASE_URLとMYSQL_DATABASE_URLはKey Vaultを参照しているため、
+          # secretRefプロパティからシークレット名を取得してKey Vaultから値を取得
+          POSTGRESQL_ENV=$(jq -r '.properties.template.containers[0].env[]? | select(.name=="POSTGRESQL_DATABASE_URL")' container-app-config.json)
+          MYSQL_ENV=$(jq -r '.properties.template.containers[0].env[]? | select(.name=="MYSQL_DATABASE_URL")' container-app-config.json)
+          
+          # POSTGRESQL_DATABASE_URLはKey Vaultから取得
+          if echo "$POSTGRESQL_ENV" | jq -e '.secretRef' > /dev/null 2>&1; then
+            POSTGRESQL_SECRET_NAME=$(echo "$POSTGRESQL_ENV" | jq -r '.secretRef')
+            echo "Getting POSTGRESQL_DATABASE_URL from Key Vault secret: $POSTGRESQL_SECRET_NAME"
+            POSTGRESQL_DATABASE_URL=$(az keyvault secret show \
+              --vault-name ${{ env.KEY_VAULT_NAME }} \
+              --name "$POSTGRESQL_SECRET_NAME" \
+              --query "value" -o tsv)
+            if [ -z "$POSTGRESQL_DATABASE_URL" ]; then
+              echo "Error: Failed to retrieve POSTGRESQL_DATABASE_URL from Key Vault"
+              exit 1
+            fi
+          else
+            echo "Error: POSTGRESQL_DATABASE_URL must reference Key Vault via secretRef"
+            exit 1
+          fi
+          
+          # MYSQL_DATABASE_URLはKey Vaultから取得
+          if echo "$MYSQL_ENV" | jq -e '.secretRef' > /dev/null 2>&1; then
+            MYSQL_SECRET_NAME=$(echo "$MYSQL_ENV" | jq -r '.secretRef')
+            echo "Getting MYSQL_DATABASE_URL from Key Vault secret: $MYSQL_SECRET_NAME"
+            MYSQL_DATABASE_URL=$(az keyvault secret show \
+              --vault-name ${{ env.KEY_VAULT_NAME }} \
+              --name "$MYSQL_SECRET_NAME" \
+              --query "value" -o tsv)
+            if [ -z "$MYSQL_DATABASE_URL" ]; then
+              echo "Error: Failed to retrieve MYSQL_DATABASE_URL from Key Vault"
+              exit 1
+            fi
+          else
+            echo "Error: MYSQL_DATABASE_URL must reference Key Vault via secretRef"
+            exit 1
+          fi
+          
+          echo "DB_TYPE=${DB_TYPE}" >> $GITHUB_ENV
+          echo "POSTGRESQL_DATABASE_URL=${POSTGRESQL_DATABASE_URL}" >> $GITHUB_ENV
+          echo "MYSQL_DATABASE_URL=${MYSQL_DATABASE_URL}" >> $GITHUB_ENV
+
+      # Pythonのセットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Poetryのインストール
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+
+      # マイグレーションを実行
+      - name: Run database migration
+        env:
+          CLOUD_PROVIDER: azure
+          DB_TYPE: ${{ env.DB_TYPE }}
+          POSTGRESQL_DATABASE_URL: ${{ env.POSTGRESQL_DATABASE_URL }}
+          MYSQL_DATABASE_URL: ${{ env.MYSQL_DATABASE_URL }}
+        run: |
+          poetry run python -m api.migrate_db
+
