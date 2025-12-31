@@ -208,6 +208,24 @@ jobs:
           POSTGRESQL_DATABASE_URL: ${{ env.POSTGRESQL_DATABASE_URL }}
           MYSQL_DATABASE_URL: ${{ env.MYSQL_DATABASE_URL }}
         run: |
+          # Azure DatabaseはSSL接続が必須のため、URLにSSLパラメータを追加
+          if [ "${{ env.DB_TYPE }}" = "postgresql" ]; then
+            # PostgreSQLの場合、SSLパラメータを追加
+            # URL形式: postgresql://user:pass@host:port/dbname -> postgresql://user:pass@host:port/dbname?sslmode=require
+            if echo "${{ env.POSTGRESQL_DATABASE_URL }}" | grep -q "?"; then
+              export POSTGRESQL_DATABASE_URL="${POSTGRESQL_DATABASE_URL}&sslmode=require"
+            else
+              export POSTGRESQL_DATABASE_URL="${POSTGRESQL_DATABASE_URL}?sslmode=require"
+            fi
+          elif [ "${{ env.DB_TYPE }}" = "mysql" ]; then
+            # MySQLの場合、SSLパラメータを追加
+            # URL形式: mysql://user:pass@host:port/dbname -> mysql://user:pass@host:port/dbname?ssl_disabled=False
+            if echo "${{ env.MYSQL_DATABASE_URL }}" | grep -q "?"; then
+              export MYSQL_DATABASE_URL="${MYSQL_DATABASE_URL}&ssl_disabled=False"
+            else
+              export MYSQL_DATABASE_URL="${MYSQL_DATABASE_URL}?ssl_disabled=False"
+            fi
+          fi
           poetry run python -m api.migrate_db
 
       # ファイアウォールルールを削除
