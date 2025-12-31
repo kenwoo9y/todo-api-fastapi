@@ -2,6 +2,8 @@ import os
 from urllib.parse import urlparse
 from urllib.parse import urlunparse
 
+# Azure環境の特別対応をインポート（循環インポートを避けるため、関数内でインポート）
+
 
 def normalize_database_url(url: str) -> str:
     """
@@ -154,6 +156,9 @@ def get_azure_database_url() -> str | None:
     - DB_TYPE=postgresql: POSTGRESQL_DATABASE_URL
     - DB_TYPE=mysql: MYSQL_DATABASE_URL
 
+    Azure Database for PostgreSQL/MySQLはSSL接続が必須のため、
+    PostgreSQLの場合はURLにsslmode=requireを追加する。
+
     Returns:
         正規化されたデータベース接続URL、または環境変数が設定されていない場合はNone
     """
@@ -168,13 +173,22 @@ def get_azure_database_url() -> str | None:
         # PostgreSQLの場合はPOSTGRESQL_DATABASE_URLを使用
         database_url = os.getenv("POSTGRESQL_DATABASE_URL")
         if database_url:
-            return normalize_database_url(database_url)
+            normalized_url = normalize_database_url(database_url)
+            # Azure環境の特別対応: PostgreSQLの場合はURLにsslmode=requireを追加
+            # 非同期エンジン用のURLなのでis_async=Trueを指定
+            from api.azure_db_config import apply_azure_ssl_to_url
+
+            return apply_azure_ssl_to_url(normalized_url, db_type_lower, is_async=True)
 
     elif db_type_lower == "mysql":
         # MySQLの場合はMYSQL_DATABASE_URLを使用
         database_url = os.getenv("MYSQL_DATABASE_URL")
         if database_url:
-            return normalize_database_url(database_url)
+            normalized_url = normalize_database_url(database_url)
+            # Azure環境の特別対応: 非同期エンジン（aiomysql）の場合はURLにssl_disabled=Falseを追加
+            from api.azure_db_config import apply_azure_ssl_to_url
+
+            return apply_azure_ssl_to_url(normalized_url, db_type_lower, is_async=True)
 
     return None
 
