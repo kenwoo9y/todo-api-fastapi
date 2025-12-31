@@ -32,6 +32,8 @@ jobs:
       AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
       CONTAINER_APP_NAME: ${{ secrets.CONTAINER_APP_NAME }}
       KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }}
+      MYSQL_SERVER_NAME: ${{ secrets.AZURE_MYSQL_SERVER_NAME }}
+      POSTGRESQL_SERVER_NAME: ${{ secrets.AZURE_POSTGRESQL_SERVER_NAME }}
 
     steps:
       # コードのチェックアウト
@@ -132,6 +134,72 @@ jobs:
         run: |
           poetry install --no-root
 
+      # 現在のIPアドレスを取得してファイアウォールルールを追加
+      - name: Add firewall rule for current IP
+        run: |
+          # 現在のIPアドレスを取得
+          CURRENT_IP=$(curl -s https://api.ipify.org)
+          echo "Current IP address: $CURRENT_IP"
+          RULE_NAME="github-actions-$(date +%s)"
+          
+          # DB_TYPEに応じて適切なサーバーにファイアウォールルールを追加
+          if [ "${{ env.DB_TYPE }}" = "postgresql" ] && [ -n "${{ env.POSTGRESQL_SERVER_NAME }}" ]; then
+            echo "Adding firewall rule for PostgreSQL server: ${{ env.POSTGRESQL_SERVER_NAME }}"
+            # Flexible Serverを試行
+            if az postgres flexible-server show \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.POSTGRESQL_SERVER_NAME }} &>/dev/null; then
+              az postgres flexible-server firewall-rule create \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --name ${{ env.POSTGRESQL_SERVER_NAME }} \
+                --rule-name "$RULE_NAME" \
+                --start-ip-address "$CURRENT_IP" \
+                --end-ip-address "$CURRENT_IP"
+            # Single Serverを試行
+            elif az postgres server show \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.POSTGRESQL_SERVER_NAME }} &>/dev/null; then
+              az postgres server firewall-rule create \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --server-name ${{ env.POSTGRESQL_SERVER_NAME }} \
+                --name "$RULE_NAME" \
+                --start-ip-address "$CURRENT_IP" \
+                --end-ip-address "$CURRENT_IP"
+            else
+              echo "Error: PostgreSQL server not found"
+              exit 1
+            fi
+          elif [ "${{ env.DB_TYPE }}" = "mysql" ] && [ -n "${{ env.MYSQL_SERVER_NAME }}" ]; then
+            echo "Adding firewall rule for MySQL server: ${{ env.MYSQL_SERVER_NAME }}"
+            # Flexible Serverを試行
+            if az mysql flexible-server show \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.MYSQL_SERVER_NAME }} &>/dev/null; then
+              az mysql flexible-server firewall-rule create \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --name ${{ env.MYSQL_SERVER_NAME }} \
+                --rule-name "$RULE_NAME" \
+                --start-ip-address "$CURRENT_IP" \
+                --end-ip-address "$CURRENT_IP"
+            # Single Serverを試行
+            elif az mysql server show \
+              --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+              --name ${{ env.MYSQL_SERVER_NAME }} &>/dev/null; then
+              az mysql server firewall-rule create \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --server-name ${{ env.MYSQL_SERVER_NAME }} \
+                --name "$RULE_NAME" \
+                --start-ip-address "$CURRENT_IP" \
+                --end-ip-address "$CURRENT_IP"
+            else
+              echo "Error: MySQL server not found"
+              exit 1
+            fi
+          fi
+          
+          echo "CURRENT_IP=${CURRENT_IP}" >> $GITHUB_ENV
+          echo "FIREWALL_RULE_NAME=${RULE_NAME}" >> $GITHUB_ENV
+
       # マイグレーションを実行
       - name: Run database migration
         env:
@@ -141,4 +209,52 @@ jobs:
           MYSQL_DATABASE_URL: ${{ env.MYSQL_DATABASE_URL }}
         run: |
           poetry run python -m api.migrate_db
+
+      # ファイアウォールルールを削除
+      - name: Remove firewall rule
+        if: always()
+        run: |
+          if [ -n "${{ env.FIREWALL_RULE_NAME }}" ]; then
+            if [ "${{ env.DB_TYPE }}" = "postgresql" ] && [ -n "${{ env.POSTGRESQL_SERVER_NAME }}" ]; then
+              echo "Removing firewall rule for PostgreSQL server: ${{ env.FIREWALL_RULE_NAME }}"
+              # Flexible Serverを試行
+              if az postgres flexible-server show \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --name ${{ env.POSTGRESQL_SERVER_NAME }} &>/dev/null; then
+                az postgres flexible-server firewall-rule delete \
+                  --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                  --name ${{ env.POSTGRESQL_SERVER_NAME }} \
+                  --rule-name "${{ env.FIREWALL_RULE_NAME }}" \
+                  --yes || true
+              # Single Serverを試行
+              elif az postgres server show \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --name ${{ env.POSTGRESQL_SERVER_NAME }} &>/dev/null; then
+                az postgres server firewall-rule delete \
+                  --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                  --server-name ${{ env.POSTGRESQL_SERVER_NAME }} \
+                  --name "${{ env.FIREWALL_RULE_NAME }}" || true
+              fi
+            elif [ "${{ env.DB_TYPE }}" = "mysql" ] && [ -n "${{ env.MYSQL_SERVER_NAME }}" ]; then
+              echo "Removing firewall rule for MySQL server: ${{ env.FIREWALL_RULE_NAME }}"
+              # Flexible Serverを試行
+              if az mysql flexible-server show \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --name ${{ env.MYSQL_SERVER_NAME }} &>/dev/null; then
+                az mysql flexible-server firewall-rule delete \
+                  --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                  --name ${{ env.MYSQL_SERVER_NAME }} \
+                  --rule-name "${{ env.FIREWALL_RULE_NAME }}" \
+                  --yes || true
+              # Single Serverを試行
+              elif az mysql server show \
+                --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                --name ${{ env.MYSQL_SERVER_NAME }} &>/dev/null; then
+                az mysql server firewall-rule delete \
+                  --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+                  --server-name ${{ env.MYSQL_SERVER_NAME }} \
+                  --name "${{ env.FIREWALL_RULE_NAME }}" || true
+              fi
+            fi
+          fi
 
