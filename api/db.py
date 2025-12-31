@@ -13,8 +13,8 @@ load_dotenv()
 # データベース接続URLを取得
 ASYNC_DB_URL = get_database_url()
 
-# Azure環境の場合、SSL接続設定を適用
-ASYNC_DB_URL, connect_args = apply_azure_db_config(ASYNC_DB_URL)
+# Azure環境の場合、SSL接続設定を適用（非同期エンジン用）
+ASYNC_DB_URL, connect_args = apply_azure_db_config(ASYNC_DB_URL, is_async=True)
 
 async_engine = create_async_engine(ASYNC_DB_URL, echo=True, connect_args=connect_args)
 async_session = sessionmaker(autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession)
