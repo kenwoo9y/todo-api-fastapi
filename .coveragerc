@@ -10,6 +10,7 @@ omit =
     api/db.py
     api/migrate_db.py
     api/cloud_db_config.py
+    api/azure_db_config.py
 
 [coverage:run]
 concurrency =
