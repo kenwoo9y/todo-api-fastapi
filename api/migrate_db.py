@@ -4,6 +4,7 @@ from urllib.parse import urlunparse
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
+from api.azure_db_config import apply_azure_db_config
 from api.cloud_db_config import get_database_url
 from api.models.task_model import Base as TaskBase
 from api.models.user_model import Base as UserBase
@@ -43,7 +44,10 @@ def convert_async_url_to_sync(url: str) -> str:
 ASYNC_DB_URL = get_database_url()
 DB_URL = convert_async_url_to_sync(ASYNC_DB_URL)
 
-engine = create_engine(DB_URL, echo=True)
+# Azure環境の場合、SSL接続設定を適用
+DB_URL, connect_args = apply_azure_db_config(DB_URL)
+
+engine = create_engine(DB_URL, echo=True, connect_args=connect_args)
 
 
 def reset_database():
