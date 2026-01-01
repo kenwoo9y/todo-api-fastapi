@@ -51,35 +51,57 @@ def configure_azure_ssl_connection(db_url: str, db_type: str, is_async: bool = F
             }
     elif db_type == "postgresql":
         # Azure Database for PostgreSQLはSSL接続が必須
-        # psycopg2でSSL接続を有効にするにはURLパラメータにsslmodeを追加
-        parsed = urlparse(db_url)
-        query_params = parse_qs(parsed.query)
-        query_params["sslmode"] = ["require"]
-        new_query = urlencode(query_params, doseq=True)
-        db_url = urlunparse(
-            (
-                parsed.scheme,
-                parsed.netloc,
-                parsed.path,
-                parsed.params,
-                new_query,
-                parsed.fragment,
+        if is_async:
+            # asyncpgでSSL接続を有効にするにはURLパラメータにssl=requireを追加
+            # asyncpgはsslmodeパラメータをサポートしていない
+            parsed = urlparse(db_url)
+            query_params = parse_qs(parsed.query)
+            if "ssl" not in query_params:
+                query_params["ssl"] = ["require"]
+            new_query = urlencode(query_params, doseq=True)
+            db_url = urlunparse(
+                (
+                    parsed.scheme,
+                    parsed.netloc,
+                    parsed.path,
+                    parsed.params,
+                    new_query,
+                    parsed.fragment,
+                )
             )
-        )
+        else:
+            # psycopg2でSSL接続を有効にするにはURLパラメータにsslmodeを追加
+            parsed = urlparse(db_url)
+            query_params = parse_qs(parsed.query)
+            query_params["sslmode"] = ["require"]
+            new_query = urlencode(query_params, doseq=True)
+            db_url = urlunparse(
+                (
+                    parsed.scheme,
+                    parsed.netloc,
+                    parsed.path,
+                    parsed.params,
+                    new_query,
+                    parsed.fragment,
+                )
+            )
 
     return db_url, connect_args
 
 
-def apply_azure_ssl_to_url(db_url: str, db_type: str) -> str:
+def apply_azure_ssl_to_url(db_url: str, db_type: str, is_async: bool = True) -> str:
     """
     Azure環境でのSSL接続設定をURLに適用する（URLのみを返す）。
 
-    PostgreSQLの場合はURLパラメータにsslmodeを追加する。
-    MySQLの場合はURLは変更しない（connect_argsで設定する必要がある）。
+    PostgreSQLの場合:
+    - 非同期エンジン（asyncpg）: URLパラメータにssl=requireを追加
+    - 同期エンジン（psycopg2）: URLパラメータにsslmode=requireを追加
+    MySQLの場合はURLは変更しない（connect_argsで設定する）。
 
     Args:
         db_url: データベース接続URL
         db_type: データベースタイプ（'mysql' または 'postgresql'）
+        is_async: 非同期エンジンを使用するかどうか（デフォルト: True）
 
     Returns:
         修正されたデータベース接続URL
@@ -89,9 +111,15 @@ def apply_azure_ssl_to_url(db_url: str, db_type: str) -> str:
 
     if db_type == "postgresql":
         # Azure Database for PostgreSQLはSSL接続が必須
-        # psycopg2/asyncpgでSSL接続を有効にするにはURLパラメータにsslmodeを追加
-        if "sslmode" not in query_params:
-            query_params["sslmode"] = ["require"]
+        if is_async:
+            # asyncpgでSSL接続を有効にするにはURLパラメータにssl=requireを追加
+            # asyncpgはsslmodeパラメータをサポートしていない
+            if "ssl" not in query_params:
+                query_params["ssl"] = ["require"]
+        else:
+            # psycopg2でSSL接続を有効にするにはURLパラメータにsslmodeを追加
+            if "sslmode" not in query_params:
+                query_params["sslmode"] = ["require"]
     # MySQLの場合はURLは変更しない（connect_argsで設定）
     # aiomysqlもpymysqlもURLパラメータではSSL設定できないため
 
