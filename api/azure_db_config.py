@@ -71,8 +71,13 @@ def configure_azure_ssl_connection(db_url: str, db_type: str, is_async: bool = F
             )
         else:
             # psycopg2でSSL接続を有効にするにはURLパラメータにsslmodeを追加
+            # asyncpg用のsslパラメータが含まれている場合は削除する
             parsed = urlparse(db_url)
             query_params = parse_qs(parsed.query)
+            # asyncpg用のsslパラメータを削除（psycopg2はsslパラメータをサポートしていない）
+            if "ssl" in query_params:
+                del query_params["ssl"]
+            # psycopg2用のsslmodeパラメータを追加
             query_params["sslmode"] = ["require"]
             new_query = urlencode(query_params, doseq=True)
             db_url = urlunparse(
