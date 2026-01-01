@@ -14,28 +14,41 @@ from urllib.parse import urlparse
 from urllib.parse import urlunparse
 
 
-def configure_azure_ssl_connection(db_url: str, db_type: str) -> Tuple[str, Dict]:
+def configure_azure_ssl_connection(db_url: str, db_type: str, is_async: bool = False) -> Tuple[str, Dict]:
     """
     Azure環境でのSSL接続設定を適用する。
 
     Args:
         db_url: データベース接続URL
         db_type: データベースタイプ（'mysql' または 'postgresql'）
+        is_async: 非同期エンジンを使用するかどうか
 
     Returns:
         (修正されたデータベース接続URL, connect_args辞書)のタプル
     """
+    import ssl
+
     connect_args: Dict = {}
 
     if db_type == "mysql":
         # Azure Database for MySQLはSSL接続が必須
-        # pymysqlでSSL接続を有効にするにはconnect_argsでSSL設定を渡す
-        connect_args = {
-            "ssl": {
-                "ca": None,  # 証明書検証をスキップ（開発環境用）
-                "check_hostname": False,
+        if is_async:
+            # aiomysqlではSSLコンテキストオブジェクトを渡す必要がある
+            # 辞書形式では動作しない（uvloopがSSLコンテキストを期待している）
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            connect_args = {
+                "ssl": ssl_context,
             }
-        }
+        else:
+            # pymysqlでは辞書形式のSSL設定を使用
+            connect_args = {
+                "ssl": {
+                    "ca": None,  # 証明書検証をスキップ（開発環境用）
+                    "check_hostname": False,
+                }
+            }
     elif db_type == "postgresql":
         # Azure Database for PostgreSQLはSSL接続が必須
         # psycopg2でSSL接続を有効にするにはURLパラメータにsslmodeを追加
@@ -98,12 +111,13 @@ def apply_azure_ssl_to_url(db_url: str, db_type: str) -> str:
     return db_url
 
 
-def apply_azure_db_config(db_url: str) -> Tuple[str, Dict]:
+def apply_azure_db_config(db_url: str, is_async: bool = False) -> Tuple[str, Dict]:
     """
     環境変数を確認し、Azure環境の場合はSSL接続設定を適用する。
 
     Args:
         db_url: データベース接続URL
+        is_async: 非同期エンジンを使用するかどうか
 
     Returns:
         (修正されたデータベース接続URL, connect_args辞書)のタプル
@@ -112,6 +126,6 @@ def apply_azure_db_config(db_url: str) -> Tuple[str, Dict]:
     db_type = os.getenv("DB_TYPE", "").lower()
 
     if cloud_provider == "azure":
-        return configure_azure_ssl_connection(db_url, db_type)
+        return configure_azure_ssl_connection(db_url, db_type, is_async)
 
     return db_url, {}
