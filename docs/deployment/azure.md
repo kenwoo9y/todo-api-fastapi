@@ -109,4 +109,112 @@ The migration script (`api/migrate_db.py`) performs the following operations:
 
 **Warning**: This migration deletes data.
 
-The workflow automatically detects whether you're using PostgreSQL or MySQL based on the `DB_TYPE` environment variable in your Container App configuration, and supports both Flexible Server and Single Server deployment models.
+---
+このドキュメントでは、FastAPIアプリケーションをMicrosoft Azureにデプロイする方法と、データベースマイグレーションを実行する方法について説明する。
+
+## 目次
+
+1. [GitHub Secrets設定](#github-secrets設定)
+2. [デプロイメント手順](#デプロイメント手順)
+3. [データベースマイグレーション手順](#データベースマイグレーション手順)
+
+## GitHub Secrets設定
+
+GitHub ActionsからMicrosoft Azureにデプロイするには、以下のシークレットを設定する必要がある。
+
+### 必要なシークレット
+
+各環境（dev、stg、prod）に対して以下のシークレットを設定する：
+
+1. **`AZURE_CONTAINER_REGISTRY`**: Azure Container Registry名
+   - Azure Portal → 「Container registries」から取得
+   - 例: `myregistry`
+
+2. **`AZURE_RESOURCE_GROUP`**: Azureリソースグループ名
+   - Azure Portal → 「Resource groups」から取得
+   - 例: `my-resource-group`
+
+3. **`AZURE_CLIENT_ID`**: AzureサービスプリンシパルのクライアントID（OIDC認証用）
+   - Azure Portal → 「Azure Active Directory」 → 「App registrations」 → アプリを選択 → 「Overview」から取得
+   - 例: `12345678-1234-1234-1234-123456789abc`
+
+4. **`AZURE_TENANT_ID`**: AzureテナントID（OIDC認証用）
+   - Azure Portal → 「Azure Active Directory」 → 「Overview」から取得
+   - 例: `87654321-4321-4321-4321-cba987654321`
+
+5. **`AZURE_SUBSCRIPTION_ID`**: AzureサブスクリプションID
+   - Azure Portal → 「Subscriptions」から取得
+   - 例: `11111111-2222-3333-4444-555555555555`
+
+6. **`CONTAINER_APP_NAME`**: Container Appsサービス名（データベースマイグレーション用）
+   - 例: `todo-api-dev`, `todo-api-stg`, `todo-api-prod`
+
+7. **`KEY_VAULT_NAME`**: Azure Key Vault名（データベースマイグレーション用）
+   - Azure Portal → 「Key vaults」から取得
+   - 例: `my-key-vault`
+
+8. **`AZURE_MYSQL_SERVER_NAME`**: Azure Database for MySQLサーバー名（データベースマイグレーション用）
+   - Azure Portal → 「Azure Database for MySQL servers」から取得
+   - 例: `my-mysql-server`
+
+9. **`AZURE_POSTGRESQL_SERVER_NAME`**: Azure Database for PostgreSQLサーバー名（データベースマイグレーション用）
+   - Azure Portal → 「Azure Database for PostgreSQL servers」から取得
+   - 例: `my-postgresql-server`
+
+### シークレットの設定方法
+
+1. GitHubリポジトリ → 「Settings」 → 「Secrets and variables」 → 「Actions」に移動
+2. 「New repository secret」をクリック
+3. 各環境に対して以下のシークレットを作成：
+   - `dev`環境用: `AZURE_CONTAINER_REGISTRY`, `AZURE_RESOURCE_GROUP`, `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `CONTAINER_APP_NAME`, `KEY_VAULT_NAME`, `AZURE_MYSQL_SERVER_NAME`, `AZURE_POSTGRESQL_SERVER_NAME`
+   - `stg`環境用: devと同じシークレット（ステージング環境用の適切な値）
+   - `prod`環境用: devと同じシークレット（本番環境用の適切な値）
+
+**注意**: `AZURE_SUBSCRIPTION_ID`や`AZURE_TENANT_ID`などの一部のシークレットは環境間で共有される場合があるが、`CONTAINER_APP_NAME`などの他のシークレットは環境固有である必要がある。
+
+## デプロイメント手順
+
+**ワークフローファイル**: `.github/workflows/deploy-azure.yml`
+
+### ブランチプッシュによる自動デプロイメント
+
+以下のブランチにプッシュすると、自動的にデプロイメントがトリガーされる：
+
+- `dev`ブランチ → dev環境にデプロイ
+- `stg`ブランチ → stg環境にデプロイ
+- `main`ブランチ → prod環境にデプロイ
+
+これらのブランチでの`push`イベントによってワークフローがトリガーされる。
+
+### 手動デプロイメント（GitHub Actions）
+
+1. GitHubリポジトリ → 「Actions」タブに移動
+2. 「Deploy to Microsoft Azure」ワークフローを選択
+3. 「Run workflow」をクリック
+4. デプロイする環境を選択（dev、stg、prod）
+5. 「Run workflow」ボタンをクリック
+
+**注意**: DockerイメージをAzure Container Registryにプッシュした後、Container Appsでこのイメージを使用するように設定する必要がある。ワークフローはイメージのビルドとプッシュのみを処理する。
+
+## データベースマイグレーション手順
+
+**ワークフローファイル**: `.github/workflows/migrate-db-azure.yml`
+
+データベースマイグレーションは、GitHub Actionsワークフローを使用して手動で実行される。
+
+### マイグレーションの実行
+
+1. GitHubリポジトリ → 「Actions」タブに移動
+2. 「Migrate Database on Microsoft Azure」ワークフローを選択
+3. 「Run workflow」をクリック
+4. マイグレーションを実行する環境を選択（dev、stg、prod）
+5. 「Run workflow」ボタンをクリック
+
+### マイグレーションの詳細
+
+マイグレーションスクリプト（`api/migrate_db.py`）は以下の操作を実行する：
+
+- 既存のテーブルを削除
+- テーブルを再作成
+
+**警告**: このマイグレーションはデータを削除する。
