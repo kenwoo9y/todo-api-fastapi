@@ -1,6 +1,6 @@
 # Google Cloud Deployment Guide
 
-This document explains how to deploy a FastAPI application to Google Cloud Platform (GCP) and how to run database migrations.
+This document explains how to deploy a FastAPI application to Google Cloud and how to run database migrations.
 
 ## Table of Contents
 
@@ -102,3 +102,107 @@ The migration script (`api/migrate_db.py`) performs the following operations:
 - Recreate tables
 
 **Warning**: This migration deletes data.
+
+---
+このドキュメントでは、FastAPIアプリケーションをGoogle Cloudにデプロイする方法と、データベースマイグレーションを実行する方法について説明する。
+
+## 目次
+
+1. [GitHub Secrets設定](#github-secrets設定)
+2. [デプロイメント手順](#デプロイメント手順)
+3. [データベースマイグレーション手順](#データベースマイグレーション手順)
+
+## GitHub Secrets設定
+
+GitHub ActionsからGoogle Cloud Platformにデプロイするには、以下のシークレットを設定する必要がある。
+
+### 必要なシークレット
+
+各環境（dev、stg、prod）に対して以下のシークレットを設定する：
+
+1. **`GCP_PROJECT_ID`**: Google CloudプロジェクトID
+   - Google Cloud Console → 「IAM & Admin」 → 「Settings」から取得
+   - 例: `my-project-id`
+
+2. **`GCP_REGION`**: Google Cloudリージョン
+   - 例: `asia-northeast1`
+
+3. **`ARTIFACT_REGISTRY_REPOSITORY`**: Artifact Registryリポジトリ名
+   - 例: `my-repository`
+
+4. **`WIF_PROVIDER`**: Workload Identity Federationプロバイダー
+   - 形式: `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_NAME/providers/PROVIDER_NAME`
+   - Google Cloud Console → 「IAM & Admin」 → 「Workload Identity Federation」から取得
+
+5. **`WIF_SERVICE_ACCOUNT`**: Workload Identity Federationサービスアカウント
+   - 形式: `SERVICE_ACCOUNT_EMAIL@PROJECT_ID.iam.gserviceaccount.com`
+   - Google Cloud Console → 「IAM & Admin」 → 「Service Accounts」から取得
+
+6. **`CLOUD_RUN_SERVICE_NAME`**: Cloud Runサービス名（データベースマイグレーション用）
+   - 例: `todo-api-dev`, `todo-api-stg`, `todo-api-prod`
+
+7. **`SQL_INSTANCE_MYSQL`**: Cloud SQL MySQLインスタンス接続名（データベースマイグレーション用）
+   - 形式: `PROJECT_ID:REGION:INSTANCE_NAME`
+   - 例: `my-project:asia-northeast1:my-mysql-instance`
+
+8. **`SQL_INSTANCE_POSTGRESQL`**: Cloud SQL PostgreSQLインスタンス接続名（データベースマイグレーション用）
+   - 形式: `PROJECT_ID:REGION:INSTANCE_NAME`
+   - 例: `my-project:asia-northeast1:my-postgresql-instance`
+
+### シークレットの設定方法
+
+1. GitHubリポジトリ → 「Settings」 → 「Secrets and variables」 → 「Actions」に移動
+2. 「New repository secret」をクリック
+3. 各環境に対して以下のシークレットを作成：
+   - `dev`環境用: `GCP_PROJECT_ID`, `GCP_REGION`, `ARTIFACT_REGISTRY_REPOSITORY`, `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT`, `CLOUD_RUN_SERVICE_NAME`, `SQL_INSTANCE_MYSQL`, `SQL_INSTANCE_POSTGRESQL`
+   - `stg`環境用: devと同じシークレット（ステージング環境用の適切な値）
+   - `prod`環境用: devと同じシークレット（本番環境用の適切な値）
+
+**注意**: `GCP_PROJECT_ID`や`GCP_REGION`などの一部のシークレットは環境間で共有される場合があるが、`CLOUD_RUN_SERVICE_NAME`などの他のシークレットは環境固有である必要がある。
+
+## デプロイメント手順
+
+**ワークフローファイル**: `.github/workflows/deploy-gcp.yml`
+
+### ブランチプッシュによる自動デプロイメント
+
+以下のブランチにプッシュすると、自動的にデプロイメントがトリガーされる：
+
+- `dev`ブランチ → dev環境にデプロイ
+- `stg`ブランチ → stg環境にデプロイ
+- `main`ブランチ → prod環境にデプロイ
+
+これらのブランチでの`push`イベントによってワークフローがトリガーされる。
+
+### 手動デプロイメント（GitHub Actions）
+
+1. GitHubリポジトリ → 「Actions」タブに移動
+2. 「Deploy to Google Cloud」ワークフローを選択
+3. 「Run workflow」をクリック
+4. デプロイする環境を選択（dev、stg、prod）
+5. 「Run workflow」ボタンをクリック
+
+**注意**: DockerイメージをArtifact Registryにプッシュした後、Cloud Runでこのイメージを使用するように設定する必要がある。ワークフローはイメージのビルドとプッシュのみを処理する。
+
+## データベースマイグレーション手順
+
+**ワークフローファイル**: `.github/workflows/migrate-db-gcp.yml`
+
+データベースマイグレーションは、GitHub Actionsワークフローを使用して手動で実行される。
+
+### マイグレーションの実行
+
+1. GitHubリポジトリ → 「Actions」タブに移動
+2. 「Migrate Database on Google Cloud」ワークフローを選択
+3. 「Run workflow」をクリック
+4. マイグレーションを実行する環境を選択（dev、stg、prod）
+5. 「Run workflow」ボタンをクリック
+
+### マイグレーションの詳細
+
+マイグレーションスクリプト（`api/migrate_db.py`）は以下の操作を実行する：
+
+- 既存のテーブルを削除
+- テーブルを再作成
+
+**注意**: このマイグレーションはデータを削除する。
