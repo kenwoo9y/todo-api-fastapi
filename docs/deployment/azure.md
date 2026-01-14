@@ -109,8 +109,6 @@ The migration script (`api/migrate_db.py`) performs the following operations:
 
 **Warning**: This migration deletes data.
 
-The workflow automatically detects whether you're using PostgreSQL or MySQL based on the `DB_TYPE` environment variable in your Container App configuration, and supports both Flexible Server and Single Server deployment models.
-
 ---
 このドキュメントでは、FastAPIアプリケーションをMicrosoft Azureにデプロイする方法と、データベースマイグレーションを実行する方法について説明する。
 
@@ -219,6 +217,4 @@ GitHub ActionsからMicrosoft Azureにデプロイするには、以下のシー
 - 既存のテーブルを削除
 - テーブルを再作成
 
-**注意**: このマイグレーションはデータを削除する。
-
-ワークフローは、Container Appの設定内の`DB_TYPE`環境変数に基づいて、PostgreSQLまたはMySQLのどちらを使用しているかを自動的に検出し、Flexible ServerとSingle Serverの両方のデプロイメントモデルをサポートする。
+**警告**: このマイグレーションはデータを削除する。
