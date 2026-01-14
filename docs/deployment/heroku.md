@@ -77,3 +77,80 @@ The migration script (`api/migrate_db.py`) performs the following operations:
 
 **Warning**: This migration deletes data. 
 
+---
+このドキュメントでは、FastAPIアプリケーションをHerokuにデプロイする方法と、データベースマイグレーションを実行する方法について説明する。
+
+## 目次
+
+1. [GitHub Secrets設定](#github-secrets設定)
+2. [デプロイメント手順](#デプロイメント手順)
+3. [データベースマイグレーション手順](#データベースマイグレーション手順)
+
+## GitHub Secrets設定
+
+GitHub ActionsからHerokuにデプロイするには、以下のシークレットを設定する必要がある。
+
+### 必要なシークレット
+
+各環境（dev、stg、prod）に対して以下のシークレットを設定する：
+
+1. **`HEROKU_API_KEY`**: Heroku APIキー
+   - Herokuダッシュボード → 「アカウント設定」 → 「APIキー」から取得
+   - または `heroku auth:token` コマンドを使用
+
+2. **`HEROKU_APP_NAME`**: Herokuアプリ名
+   - 例: `my-app-name-dev`, `my-app-name-stg`, `my-app-name-prod`
+
+### シークレットの設定方法
+
+1. GitHubリポジトリ → 「Settings」 → 「Secrets and variables」 → 「Actions」に移動
+2. 「New repository secret」をクリック
+3. 各環境に対して以下のシークレットを作成：
+   - `dev`環境用: `HEROKU_API_KEY` (dev用), `HEROKU_APP_NAME` (dev用)
+   - `stg`環境用: `HEROKU_API_KEY` (stg用), `HEROKU_APP_NAME` (stg用)
+   - `prod`環境用: `HEROKU_API_KEY` (prod用), `HEROKU_APP_NAME` (prod用)
+
+## デプロイメント手順
+
+**ワークフローファイル**: `.github/workflows/deploy-heroku.yml`
+
+### ブランチプッシュによる自動デプロイメント
+
+以下のブランチにプッシュすると、自動的にデプロイメントがトリガーされる：
+
+- `dev`ブランチ → dev環境にデプロイ
+- `stg`ブランチ → stg環境にデプロイ
+- `main`ブランチ → prod環境にデプロイ
+
+これらのブランチでの`push`イベントによってワークフローがトリガーされる。
+
+### 手動デプロイメント（GitHub Actions）
+
+1. GitHubリポジトリ → 「Actions」タブに移動
+2. 「Deploy to Heroku」ワークフローを選択
+3. 「Run workflow」をクリック
+4. デプロイする環境を選択（dev、stg、prod）
+5. 「Run workflow」ボタンをクリック
+
+## データベースマイグレーション手順
+
+**ワークフローファイル**: `.github/workflows/migrate-db-heroku.yml`
+
+データベースマイグレーションは、GitHub Actionsワークフローを使用して手動で実行される。
+
+### マイグレーションの実行
+
+1. GitHubリポジトリ → 「Actions」タブに移動
+2. 「Migrate Database on Heroku」ワークフローを選択
+3. 「Run workflow」をクリック
+4. マイグレーションを実行する環境を選択（dev、stg、prod）
+5. 「Run workflow」ボタンをクリック
+
+### マイグレーションの詳細
+
+マイグレーションスクリプト（`api/migrate_db.py`）は以下の操作を実行する：
+
+- 既存のテーブルを削除
+- テーブルを再作成
+
+**注意**: このマイグレーションはデータを削除する。
