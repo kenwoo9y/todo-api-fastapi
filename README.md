@@ -31,7 +31,7 @@ This is a ToDo Web API implemented with FastAPI, designed for simplicity and ext
 - [Docker](https://www.docker.com/) with Compose v3.9 - Containerization platform for building and managing applications
 
 ### Testing & Quality Assurance
-- [pytest](https://docs.pytest.org/) v0.23.6 - Python testing framework
+- [pytest](https://docs.pytest.org/) v8.1.1  - Python testing framework
 - [pytest-cov](https://pytest-cov.readthedocs.io/) v6.0.0 - Code coverage plugin
 - [Ruff](https://docs.astral.sh/ruff/) v0.7.4 - Fast Python linter and formatter
 
